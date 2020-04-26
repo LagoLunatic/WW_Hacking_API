@@ -13,7 +13,7 @@ The C code you write can call the vanilla game's functions and use its global va
 bool currSwitchIsSet = dSv_info_c__isSwitch(&g_dComIfG_gameInfo.mSvInfo, switchToCheck, this->parent.mCurrent.mRoomNo);
 ```
 ```c
-// Load a the file with file index 4 from files/res/Object/Ecube.arc, and instantiate it as a 3D model.
+// Load a the file with index 4 from files/res/Object/Ecube.arc, and instantiate it as a 3D model.
 J3DModelData* modelData = dRes_control_c__getRes("Ecube", 4, g_dComIfG_gameInfo.mResCtrl.mObjectInfo, 0x40);
 this->mpModel = mDoExt_J3DModel__create(modelData, 0x80000, 0x11000000);
 ```
@@ -29,7 +29,7 @@ Download and install the following:
 
 ### Usage
 
-You can compile a custom actor into a REL file like so:
+You can compile a custom actor into a REL file like so:  
 `py build.py [path to C source file] [REL module ID number in hexadecimal] [actor profile symbol name] [optional: path to RELS.arc to insert the REL into]`
 
 `[path to C source file]` is the path to your .c file containing your custom actor's code.  
