@@ -154,8 +154,18 @@ def convert_elf_to_rel(in_elf_path, out_rel_path, rel_id, actor_profile_name, re
     profile_list.save_changes(preserve_section_data_offsets=True)
     
     # Insert the RELs.
-    rels_arc.get_file_entry("d_a_rectangle.rel").data = rel.data
     rels_arc.get_file_entry("f_pc_profile_lst.rel").data = profile_list.data
+    found_rel = False
+    for file_entry in rels_arc.file_entries:
+      if file_entry.is_dir:
+        continue
+      file_entry.decompress_data_if_necessary()
+      if read_u32(file_entry.data, 0) == rel.id:
+        file_entry.data = rel.data
+        found_rel = True
+        break
+    if not found_rel:
+      raise Exception("Failed to find REL to replace with ID 0x%03X" % rel.id)
     
     rels_arc.save_changes()
     with open(rels_arc_path, "wb") as f:
