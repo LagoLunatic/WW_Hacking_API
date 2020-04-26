@@ -7,7 +7,7 @@ import elf2rel
 
 if len(sys.argv) < 4 or len(sys.argv) > 5:
   print("Invalid arguments. Format should be as follows:")
-  print("  py build.py [path to C source file] [REL ID number in hexadecimal] [actor profile symbol name] [optional: path to RELS.arc to insert the REL into]")
+  print("  py build.py [path to C source file] [REL module ID number in hexadecimal] [actor profile symbol name] [optional: path to RELS.arc to insert the REL into]")
   sys.exit(1)
 
 c_src_path = sys.argv[1]
@@ -39,6 +39,9 @@ build_dir = "./build"
 basename = os.path.basename(c_src_path)
 basename_no_ext = os.path.splitext(basename)[0]
 linker_script_path = "./vanilla_defines/ww_linker.ld"
+
+if not os.path.isdir(build_dir):
+  os.makedirs(build_dir)
 
 
 elf_path = os.path.join(build_dir, basename_no_ext + ".o")
