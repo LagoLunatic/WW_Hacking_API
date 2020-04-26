@@ -10,10 +10,10 @@ In the future it will also allow adding as many new actors as you want into the 
 The C code you write can call the vanilla game's functions and use its global variables seamlessly, for example:
 ```c
 // Check if a switch is set.
-bool currSwitchIsSet = dSv_info_c__isSwitch(&g_dComIfG_gameInfo.mSvInfo, switchToCheck, this->parent.mCurrent.mRoomNo);
+bool isSwitchSet = dSv_info_c__isSwitch(&g_dComIfG_gameInfo.mSvInfo, switchToCheck, this->parent.mCurrent.mRoomNo);
 ```
 ```c
-// Load a the file with index 4 from files/res/Object/Ecube.arc, and instantiate it as a 3D model.
+// Load the file with index 4 from files/res/Object/Ecube.arc, and instantiate it as a 3D model.
 J3DModelData* modelData = dRes_control_c__getRes("Ecube", 4, g_dComIfG_gameInfo.mResCtrl.mObjectInfo, 0x40);
 this->mpModel = mDoExt_J3DModel__create(modelData, 0x80000, 0x11000000);
 ```
@@ -30,7 +30,7 @@ Download and install the following:
 ### Usage
 
 You can compile a custom actor into a REL file like so:  
-`py build.py [path to C source file] [REL module ID number in hexadecimal] [actor profile symbol name] [optional: path to RELS.arc to insert the REL into]`
+`py build_rel.py [path to C source file] [REL module ID number in hexadecimal] [actor profile symbol name] [optional: path to RELS.arc to insert the REL into]`
 
 `[path to C source file]` is the path to your .c file containing your custom actor's code.  
 `[REL module ID number in hexadecimal]` is the module ID to give to the new REL file. Do not confuse this with the actor ID - this is only used for linking RELs, and must be unique among all RELs in the game.  
@@ -40,6 +40,6 @@ You can compile a custom actor into a REL file like so:
 For example:
 `py build_rel.py "./examples/switch_op.c" 0x58 g_profile_SwitchOperator "../Wind Waker Extracted/files/RELS.arc"`
 
-For choosing the REL module ID, if replacing an existing REL, simply look at the first 4 bytes of the original REL. That's the module ID for it - so specify that ID and it will replace that actor.  
+As for how to choose the REL module ID, if replacing an existing REL, simply look at the first 4 bytes of the original REL in a hex editor. That's the module ID for it - so specify that ID and it will replace that actor.  
 If you don't want to break anything in the game, using 0x58 is recommended - that's the module ID for the actor `hotest`, aka `d_a_rectangle.rel` - this is a useless test actor that was never placed and doesn't do anything, so replacing it has no side effects.  
-If you want to add a new REL to the game without replacing an existing one (not supported by this API yet), any module ID 0x1A0 or higher was unused in the vanilla game.  
+If you want to add a new REL to the game without replacing an existing one (not supported by this API yet), the first unused module ID is 0x1A0.  

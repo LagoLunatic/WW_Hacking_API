@@ -7,7 +7,7 @@ import elf2rel
 
 if len(sys.argv) < 4 or len(sys.argv) > 5:
   print("Invalid arguments. Format should be as follows:")
-  print("  py build.py [path to C source file] [REL module ID number in hexadecimal] [actor profile symbol name] [optional: path to RELS.arc to insert the REL into]")
+  print("  py build_rel.py [path to C source file] [REL module ID number in hexadecimal] [actor profile symbol name] [optional: path to RELS.arc to insert the REL into]")
   sys.exit(1)
 
 c_src_path = sys.argv[1]
