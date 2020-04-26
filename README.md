@@ -1,7 +1,7 @@
 
 ### About
 
-This is a work-in-progress API for writing custom for the The Legend of Zelda: The Wind Waker (USA GameCube version).
+This is a work-in-progress API for writing custom code for the The Legend of Zelda: The Wind Waker (USA GameCube version).
 
 Currently, it allows you to create brand new actors from scratch coded in C, and will compile them into GameCube REL files.  
 It can also insert those REL files into the game, replacing an existing actor.  
