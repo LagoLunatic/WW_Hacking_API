@@ -8,6 +8,12 @@ NAMESPACES_TO_NOT_QUALIFY = [
   "d_com_inf_game",
   "f_pc_leaf",
   "f_op_actor",
+  "f_op_actor_mng",
+  "mtx",
+  "d_kankyo",
+  "d_bg_s",
+  "m_Do_ext",
+  "m_Do_printf",
 ]
 
 def clean_symbol_name(symbol_name):
@@ -75,6 +81,9 @@ for line in input_str.splitlines():
   if line == "typedef struct struct struct, *Pstruct;":
     line = "//" + line
   
+  if line in ["typedef ulong size_t;", "typedef struct _IO_FILE __FILE;", "typedef short    wchar_t;", "typedef long __off_t;"]:
+    line = "//" + line
+  
   if line.startswith("typedef struct ") or line.startswith("struct "):
     line = re.sub(r"\*", "_star", line)
     line = re.sub(r",(\S)", "_\\1", line)
@@ -106,7 +115,7 @@ for line in input_str.splitlines():
   if current_struct_name in ["cXyz", "csXyz"]:
     # We added these to the beginning so we don't want them duplicated.
     pass
-  elif current_struct_name in ["struct"]:
+  elif current_struct_name in ["struct", "_IO_FILE", "_IO_marker"]:
     line_with_comment = line + comment
     output_str += ("// " + line_with_comment + "\n")
   else:
@@ -210,15 +219,23 @@ for func_name, address, func_signature, func_size, namespace in func_datas:
   
   func_signature = "%s %s%s" % (return_value, symbol_name, arguments)
   
+  should_comment_out = False
   if symbol_name in seen_symbol_names:
     # Duplicate name. Comment it out for now.
+    should_comment_out = True
+  
+  if symbol_name == "MSL_C_PPCEABI_bare_H__fwide":
+    # Causes issues for some reason, just comment it out since it's unimportant
+    should_comment_out = True
+  
+  if should_comment_out:
     output_str += "// "
     linker_str += "/* "
   
   output_str += "%s;" % func_signature
   linker_str += "%s = 0x%08X;" % (symbol_name, address)
   
-  if symbol_name in seen_symbol_names:
+  if should_comment_out:
     linker_str += " */"
   
   output_str += "\n"

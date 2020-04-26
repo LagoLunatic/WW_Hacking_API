@@ -129,7 +129,8 @@ def convert_elf_to_rel(in_elf_path, out_rel_path, rel_id, actor_profile_name, re
   if rels_arc_path is not None and os.path.isfile(rels_arc_path):
     with open(rels_arc_path, "rb") as f:
       data = BytesIO(f.read())
-    rels_arc = RARC(data)
+    rels_arc = RARC()
+    rels_arc.read(data)
     
     # Update the profile list to properly reference the profile in the custom REL.
     # Then insert the custom REL and the updated profile list into RELS.arc and save it for quick testing.
