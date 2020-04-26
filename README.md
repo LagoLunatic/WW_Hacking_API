@@ -3,9 +3,23 @@
 
 This is a work-in-progress API for writing custom for the The Legend of Zelda: The Wind Waker (USA GameCube version).
 
-Currently, it allows you to create brand new actors from scratch, compiling them into custom REL files.
+Currently, it allows you to create brand new actors from scratch coded in C, and will compile them into GameCube REL files.
 It can also insert those REL files into the game, replacing an existing actor.
 In the future it will also allow adding as many new actors as you want into the game without having to replace existing ones.
+
+The C code you write can call the vanilla game's functions and use its global variables seamlessly, for example:
+```c
+// Check if a switch is set.
+bool currSwitchIsSet = dSv_info_c__isSwitch(&g_dComIfG_gameInfo.mSvInfo, switchToCheck, this->parent.mCurrent.mRoomNo);
+```
+```c
+// Load a the file with file index 4 from files/res/Object/Ecube.arc, and instantiate it as a 3D model.
+J3DModelData* modelData = dRes_control_c__getRes("Ecube", 4, g_dComIfG_gameInfo.mResCtrl.mObjectInfo, 0x40);
+this->mpModel = mDoExt_J3DModel__create(modelData, 0x80000, 0x11000000);
+```
+
+You can use any function, variable, or struct that has been documented. Not every single one in the game has been documented, but hundreds of them have, so you should be able to do quite a lot.
+Huge thanks to [Jasper](https://github.com/magcius) for documenting tons of them.
 
 ### Requirements
 
