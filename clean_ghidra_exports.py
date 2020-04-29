@@ -1,7 +1,11 @@
 
 import re
 from collections import OrderedDict
+import yaml
 
+
+with open("overloaded_funcs.txt", "r") as f:
+  overloaded_funcs = yaml.safe_load(f)
 
 NAMESPACES_TO_NOT_QUALIFY = [
   "Global",
@@ -150,7 +154,15 @@ for line in input_str.splitlines()[1:]:
     # Not in main.dol
     continue
   
-  # TODO: implement manual renaming of overloaded functions such as getRes -> getNameRes here
+  func_sign_match = re.search(r"^(\S+(?: \*)?) (.+)$", func_signature)
+  return_value = func_sign_match.group(1)
+  rest_of_func_sign = func_sign_match.group(2)
+  assert rest_of_func_sign.startswith(func_name)
+  arguments = rest_of_func_sign[len(func_name):]
+  
+  if address in overloaded_funcs:
+    # Manually rename some overloaded functions to prevent conflicts because C does not support overloading.
+    func_name = overloaded_funcs[address]
   
   if func_name not in func_name_to_namespaces:
     func_name_to_namespaces[func_name] = []
@@ -158,7 +170,7 @@ for line in input_str.splitlines()[1:]:
   if namespace not in func_name_to_namespaces[func_name]:
     func_name_to_namespaces[func_name].append(namespace)
   
-  func_datas.append((func_name, address, func_signature, func_size, namespace))
+  func_datas.append((func_name, address, return_value, arguments, func_size, namespace))
 
 #namespaces_that_need_qualification = []
 #for func_name, namespaces in func_name_to_namespaces.items():
@@ -175,7 +187,7 @@ for line in input_str.splitlines()[1:]:
 output_str = "\n"
 linker_str = "\n"
 seen_symbol_names = []
-for func_name, address, func_signature, func_size, namespace in func_datas:
+for func_name, address, return_value, arguments, func_size, namespace in func_datas:
   symbol_name = func_name
   if symbol_name.startswith("~"):
     symbol_name = symbol_name[1:] + "_destructor"
@@ -187,14 +199,7 @@ for func_name, address, func_signature, func_size, namespace in func_datas:
   # Clean up the symbol name.
   symbol_name = clean_symbol_name(symbol_name)
   
-  # Apply the changes we made to the symbol name to the function signature as well.
-  func_sign_match = re.search(r"^(\S+(?: \*)?) (.+)$", func_signature)
-  return_value = func_sign_match.group(1)
-  rest_of_func_sign = func_sign_match.group(2)
-  assert rest_of_func_sign.startswith(func_name)
-  
   # Clean up the arguments.
-  arguments = rest_of_func_sign[len(func_name):]
   arguments = re.sub(r"[@:]", "_", arguments)
   arguments = re.sub(r"TVec3<float>( [^{])", "cXyz\\1", arguments)
   arguments = re.sub(r"TVec3<short>( [^{])", "csXyz\\1", arguments)
