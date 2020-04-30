@@ -13,6 +13,9 @@ int daNPCTest_IsDelete(NPC_Test_class* this);
 int daNPCTest_Delete(NPC_Test_class* this);
 int daNPCTest_Draw(NPC_Test_class* this);
 int daNPCTest_Execute(NPC_Test_class* this);
+int daNPCTest__next_msgStatus(NPC_Test_class* this, ulong* msgIDPtr);
+ulong daNPCTest__getMsg(NPC_Test_class* this);
+void daNPCTest__anmAtr(NPC_Test_class* this, ushort unk);
 
 profile_method_class l_daNPCTest_Method = {
   .parent = {
@@ -51,4 +54,12 @@ const f_pc_profile__Profile_Actor g_profile_NPC_Test = {
   .mCullType = 0,
   0,
   0,
+};
+
+const fopNpc_npc_c__vtbl daNpc_Test_c_vtbl = {
+  0,
+  0,
+  .next_msgStatus = (pointer)&daNPCTest__next_msgStatus,
+  .getMsg = (pointer)&daNPCTest__getMsg,
+  .anmAtr = (pointer)&daNPCTest__anmAtr,
 };
