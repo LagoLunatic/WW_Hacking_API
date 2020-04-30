@@ -10979,7 +10979,6 @@ extern undefined1 daSteamTag_c__mEmitterNum;
 extern undefined1 daYkgr_c__m_flag;
 extern undefined1 daYkgr_c__m_alpha_flag;
 extern undefined1 daYkgr_c__m_alpha;
-extern undefined1 daYkgr_c__m_aim_rate;
 extern undefined1 daYkgr_c__m_path;
 extern undefined1 daYkgr_c__m_emitter;
 extern undefined1 daTagWaterlevel__Act_c__M_now;

@@ -24777,7 +24777,6 @@ daSteamTag_c__mEmitterNum = 0x803F6B28;
 daYkgr_c__m_flag = 0x803F6B29;
 daYkgr_c__m_alpha_flag = 0x803F6B2A;
 daYkgr_c__m_alpha = 0x803F6B2B;
-daYkgr_c__m_aim_rate = 0x803F6B2C;
 daYkgr_c__m_path = 0x803F6B30;
 daYkgr_c__m_emitter = 0x803F6B34;
 daTagWaterlevel__Act_c__M_now = 0x803F6B38;
