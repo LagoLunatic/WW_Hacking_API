@@ -18,6 +18,7 @@ NAMESPACES_TO_NOT_QUALIFY = [
   "d_bg_s",
   "m_Do_ext",
   "m_Do_printf",
+  "m_Do_mtx",
 ]
 
 def clean_symbol_name(symbol_name):

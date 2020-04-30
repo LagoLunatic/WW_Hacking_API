@@ -47,6 +47,14 @@ void daNPCTest__daNPCTest(NPC_Test_class* this) {
   this->parent.field_0x2d0 = 0;
   this->parent.field_0x32c = 0;
   
+  // Initialize the actor's Bg collision checker (so it stops moving when hitting walls and floors).
+  dBgS_Acch__dBgS_Acch(&this->parent.mObjAcch.parent);
+  this->parent.mObjAcch.parent.mChk.vtbl = &dBgS_ObjAcch____vt.mChk_vtbl;
+  this->parent.mObjAcch.parent.mDChk.mPolyPassChk.parent.vtbl = &dBgS_ObjAcch____vt.mDChk_vtbl.mPolyPassChk_vtbl;
+  this->parent.mObjAcch.parent.mDChk.mGrpPassChk.parent.vtbl = &dBgS_ObjAcch____vt.mDChk_vtbl.mGrpPassChk_vtbl;
+  this->parent.mObjAcch.parent.mDChk.mPolyPassChk.parent.mPass0 = 1;
+  dBgS_AcchCir__dBgS_AcchCir(&this->parent.mAcchCir);
+  
   // Initialize the actor's Cc collision (so it prevents other actors from walking into it).
   dCcD_GStts__dCcD_GStts(&this->parent.mStts.mGStts);
   this->parent.mStts.parent.vtbl = &dCcD_Stts____vt.parent;
@@ -84,6 +92,17 @@ int daNPCTest_Create(NPC_Test_class* this) {
   
   this->parent.parent.mpMtx = &this->parent.mpMcaMorf->mpModel->mBaseMtx;
   
+  // Set the actor's Bg collision checker with a half-height of 30 and a radius of 50.
+  dBgS_AcchCir__SetWall(&this->parent.mAcchCir, 30.0f, 50.0f);
+  dBgS_Acch__Set(&this->parent.mObjAcch.parent,
+                 &this->parent.parent.mCurrent.mPos,
+                 &this->parent.parent.mNext.mPos,
+                 &this->parent.parent, 1,
+                 &this->parent.mAcchCir,
+                 &this->parent.parent.mVelocity,
+                 0, 0);
+  
+  // Set the actor's Cc collision.
   dCcD_Stts__Init(&this->parent.mStts, 0xff, 0xff, &this->parent.parent);
   this->parent.mCyl.parent.parent.parent.mpStts = &this->parent.mStts.parent;
   dCcD_Cyl__Set(&this->parent.mCyl, &d_npc__dNpc_cyl_src);
@@ -122,14 +141,26 @@ int daNPCTest_Execute(NPC_Test_class* this) {
   // Play the animation.
   mDoExt_McaMorf__play(this->parent.mpMcaMorf, &this->parent.parent.mCurrent.mPos, 0, 0);
   
-  // Update the model's position.
+  // Some simple hardcoded movement.
+  if (this->parent.parent.mCurrent.mRot.y < 0x8000 && this->parent.parent.mCurrent.mRot.y >= 0) {
+    this->parent.parent.mCurrent.mRot.y += 0x8000/45;
+  }
+  this->parent.parent.mVelocityFwd = 10.0f;
+  fopAcM_calcSpeed(&this->parent.parent);
+  fopAcM_posMove(&this->parent.parent, 0);
+  
+  // Correct this actor's position relative to Bg collision (walkable collision such as floors or walls it may have run into).
+  dBgS_Acch__CrrPos(&this->parent.mObjAcch.parent, &g_dComIfG_gameInfo.mPlay.mBgS);
+  
+  // Update the model's transform.
   PSMTXTrans(this->parent.parent.mCurrent.mPos.x, this->parent.parent.mCurrent.mPos.y, this->parent.parent.mCurrent.mPos.z, &mDoMtx_stack_c__now);
+  mDoMtx_YrotM(&mDoMtx_stack_c__now, this->parent.parent.mCurrent.mRot.y);
   PSMTXCopy(&mDoMtx_stack_c__now, &this->parent.mpMcaMorf->mpModel->mBaseMtx);
   
   // Calculate how the vertices should be deformed by the animation.
   mDoExt_McaMorf__calc(this->parent.mpMcaMorf);
   
-  // Set the actor's Cc collision (so it prevents other actors from walking into it).
+  // Set the actor's Cc collision with a height of 50 and a radius of 140.
   fopNpc_npc_c__setCollision(&this->parent, 50.0f, 140.0f);
   
   return 1;
