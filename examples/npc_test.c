@@ -41,8 +41,8 @@ int daNPCTest_createSolidHeap_CB(NPC_Test_class* this) {
 void daNPCTest__daNPCTest(NPC_Test_class* this) {
   fopAc_ac_c__fopAc_ac_c(&this->parent.parent);
   
-  this->parent.field_0x29c = 0;
-  this->parent.field_0x29b = 0;
+  this->parent.mJntCtrl.field_0xc = 0;
+  this->parent.mJntCtrl.field_0xb = 0;
   this->parent.field_0x2cc = 0;
   this->parent.field_0x2d0 = 0;
   this->parent.field_0x32c = 0;
@@ -91,6 +91,23 @@ int daNPCTest_Create(NPC_Test_class* this) {
   }
   
   this->parent.parent.mpMtx = &this->parent.mpMcaMorf->mpModel->mBaseMtx;
+  
+  // Initialize the actor's path.
+  int pathIndex = (this->parent.parent.parent.parent.mParameters & 0x000000FF);
+  if (pathIndex != 0xFF) {
+    dNpc_PathRun_c__setInf(&this->mPathRun, pathIndex, this->parent.parent.mCurrent.mRoomNo, true);
+    if (this->mPathRun.mPath == 0) {
+      return cPhs_ERROR_e;
+    }
+    this->parent.parent.mStatus &= ~fopAcM__Status__DoNotExecuteIfDidNotDraw;
+    
+    dNpc_PathRun_c__getPoint(&this->parent.parent.mCurrent.mPos, &this->mPathRun, this->mPathRun.mCurrPointIndex);
+    this->parent.parent.mNext.mPos.x = this->parent.parent.mCurrent.mPos.x;
+    this->parent.parent.mNext.mPos.y = this->parent.parent.mCurrent.mPos.y;
+    this->parent.parent.mNext.mPos.z = this->parent.parent.mCurrent.mPos.z;
+    
+    dNpc_PathRun_c__incIdxLoop(&this->mPathRun);
+  }
   
   // Set the actor's Bg collision checker with a half-height of 30 and a radius of 50.
   dBgS_AcchCir__SetWall(&this->parent.mAcchCir, 30.0f, 50.0f);
@@ -141,13 +158,24 @@ int daNPCTest_Execute(NPC_Test_class* this) {
   // Play the animation.
   mDoExt_McaMorf__play(this->parent.mpMcaMorf, &this->parent.parent.mCurrent.mPos, 0, 0);
   
-  // Some simple hardcoded movement.
-  if (this->parent.parent.mCurrent.mRot.y < 0x8000 && this->parent.parent.mCurrent.mRot.y >= 0) {
-    this->parent.parent.mCurrent.mRot.y += 0x8000/45;
+  // Determine if we've reached the current path point and advance to the next one if so.
+  bool reachedCurrPoint = dNpc_PathRun_c__chkPointPass(&this->mPathRun, &this->parent.parent.mCurrent.mPos, this->mPathRun.mGoingForwards);
+  if (reachedCurrPoint) {
+    dNpc_PathRun_c__nextIdxAuto(&this->mPathRun);   
   }
+  
+  // Calculate Y rotation towards the next path point.
+  cXyz outPointPos;
+  short outYRot;
+  dNpc_PathRun_c__getPoint(&outPointPos, &this->mPathRun, this->mPathRun.mCurrPointIndex);
+  dNpc_calc_DisXZ_AngY(&this->parent.parent.mCurrent.mPos, &outPointPos, 0, &outYRot);
+  
+  // Gradually turn towards the desired Y rotation (maximum 0x500 angle units = 7 degrees turned per frame).
+  cLib_addCalcAngleS2(&this->parent.parent.mCurrent.mRot.y, outYRot, 1, 0x500);
+  
+  // Update position based on velocity and rotation.
   this->parent.parent.mVelocityFwd = 10.0f;
-  fopAcM_calcSpeed(&this->parent.parent);
-  fopAcM_posMove(&this->parent.parent, 0);
+  fopAcM_posMoveF(&this->parent.parent, &this->parent.mStts.parent.mCcMove);
   
   // Correct this actor's position relative to Bg collision (walkable collision such as floors or walls it may have run into).
   dBgS_Acch__CrrPos(&this->parent.mObjAcch.parent, &g_dComIfG_gameInfo.mPlay.mBgS);

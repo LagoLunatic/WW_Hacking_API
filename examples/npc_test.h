@@ -3,6 +3,7 @@ typedef struct NPC_Test_class {
   fopNpc_npc_c parent;
   
   request_of_phase_process_class mPhaseRequest;
+  dNpc_PathRun_c mPathRun;
 } NPC_Test_class;
 
 void _prolog();

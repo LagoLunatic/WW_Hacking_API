@@ -21,6 +21,11 @@ NAMESPACES_TO_NOT_QUALIFY = [
   "m_Do_mtx",
 ]
 
+NAMESPACES_TO_NOT_QUALIFY_FOR_FUNCS = NAMESPACES_TO_NOT_QUALIFY + [
+  "d_npc",
+  "SComponent",
+]
+
 def clean_symbol_name(symbol_name):
   symbol_name = symbol_name.replace("new[]", "new_array")
   symbol_name = symbol_name.replace("delete[]", "delete_array")
@@ -194,7 +199,7 @@ for func_name, address, return_value, arguments, func_size, namespace in func_da
     symbol_name = symbol_name[1:] + "_destructor"
   
   # Add the namespace to the symbol name.
-  if namespace not in NAMESPACES_TO_NOT_QUALIFY:
+  if namespace not in NAMESPACES_TO_NOT_QUALIFY_FOR_FUNCS:
     symbol_name = "%s__%s" % (namespace, symbol_name)
   
   # Clean up the symbol name.
