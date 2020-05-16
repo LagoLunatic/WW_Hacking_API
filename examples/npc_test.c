@@ -41,11 +41,17 @@ int daNPCTest_createSolidHeap_CB(NPC_Test_class* this) {
 void daNPCTest__daNPCTest(NPC_Test_class* this) {
   fopAc_ac_c__fopAc_ac_c(&this->parent.parent);
   
+  dNpc_EventCut_c__setActorInfo2(&this->eventActor, "Md1", &this->parent);
+  
   this->parent.mJntCtrl.field_0xc = 0;
   this->parent.mJntCtrl.field_0xb = 0;
   this->parent.field_0x2cc = 0;
   this->parent.field_0x2d0 = 0;
   this->parent.field_0x32c = 0;
+  
+  this->parent.parent.mAttentionFlags[1] = 0xAB;
+  this->parent.parent.mAttentionFlags[3] = 0xA9;
+  this->parent.parent.mInteractFlags = fopAc_ac_c__InteractFlags__Targetable_B | fopAc_ac_c__InteractFlags__Talkable | fopAc_ac_c__InteractFlags__PlayEnemyMusic;
   
   // Initialize the actor's Bg collision checker (so it stops moving when hitting walls and floors).
   dBgS_Acch__dBgS_Acch(&this->parent.mObjAcch.parent);
@@ -195,11 +201,15 @@ int daNPCTest_Execute(NPC_Test_class* this) {
 }
 
 int daNPCTest__next_msgStatus(NPC_Test_class* this, ulong* msgIDPtr) {
-  return 0x10;
+  return fopNpc_npc_c__MessageStatus__Finished;
 }
 
 ulong daNPCTest__getMsg(NPC_Test_class* this) {
-  return 0;
+  if(dKy_daynight_check()) {
+	  return 0;
+  }
+  
+  return 1;
 }
 
 void daNPCTest__anmAtr(NPC_Test_class* this, ushort unk) {

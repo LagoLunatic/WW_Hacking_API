@@ -1,6 +1,7 @@
 
 typedef struct NPC_Test_class {
   fopNpc_npc_c parent;
+  dNpc_EventCut_c eventActor;
   
   request_of_phase_process_class mPhaseRequest;
   dNpc_PathRun_c mPathRun;
@@ -51,7 +52,7 @@ const f_pc_profile__Profile_Actor g_profile_NPC_Test = {
   0,
   .mpMtd2 = &l_daNPCTest_Method,
   .mStatus = 0,
-  .mActorType = fopAc_ac__Type__Regular,
+  .mActorType = fopAc_ac__Type__Some_NPCs,
   .mCullType = 0,
   0,
   0,
