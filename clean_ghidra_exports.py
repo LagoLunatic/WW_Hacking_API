@@ -160,7 +160,7 @@ for line in input_str.splitlines()[1:]:
     # Not in main.dol
     continue
   
-  func_sign_match = re.search(r"^(\S+(?: \*)?) (.+)$", func_signature)
+  func_sign_match = re.search(r"^(\S+(?: \*){0,}) (.+)$", func_signature)
   return_value = func_sign_match.group(1)
   rest_of_func_sign = func_sign_match.group(2)
   assert rest_of_func_sign.startswith(func_name)
