@@ -55,16 +55,19 @@ with open("./ghidra_exports/ww_structs_from_ghidra.h") as f:
   input_str = f.read()
 
 output_str = "\n"
-output_str += "struct cXyz { float x; float y; float z; };\n\n"
-output_str += "struct csXyz { short x; short y; short z; };\n\n"
+output_str += "struct cXyz {\n    float x;\n    float y;\n    float z;\n};\n\n"
+output_str += "struct csXyz {\n    short x;\n    short y;\n    short z;\n};\n\n"
 current_enum_name = None
 current_struct_name = None
 for line in input_str.splitlines():
-  comment_match = re.search(r"//|/\*", line)
+  comment_match = re.search(r" //| /\*", line)
   if comment_match:
     comment_start_index = comment_match.start()
     comment = line[comment_start_index:]
     line = line[:comment_start_index]
+    
+    if comment in [" /* PlaceHolder Class Structure */", " /* PlaceHolder Structure */", " /* Created by retype action */"]:
+      comment = ""
   else:
     comment = ""
   
