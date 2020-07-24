@@ -52,7 +52,7 @@ const f_pc_profile__Profile_Actor g_profile_NPC_Test = {
   0,
   .mpMtd2 = &l_daNPCTest_Method,
   .mStatus = 0,
-  .mActorType = fopAc_ac__Type__Some_NPCs,
+  .mActorType = fopAc_ac_c__Type__Some_NPCs,
   .mCullType = 0,
   0,
   0,

@@ -25,13 +25,19 @@ int daNPCTest_createSolidHeap_CB(NPC_Test_class* this) {
   
   J3DAnmTransformKey* animData = dRes_control_c__getIDRes("Md", 0x1E, g_dComIfG_gameInfo.mResCtrl.mObjectInfo, 0x40);
   
-  this->parent.mpMcaMorf = (mDoExt_McaMorf*)JKernel__operator_new(sizeof(mDoExt_McaMorf));
+  mDoExt_McaMorf* mcaMorf = (mDoExt_McaMorf*)JKernel__operator_new(sizeof(mDoExt_McaMorf));
+  if (mcaMorf == 0) {
+    return 0;
+  }
   
-  mDoExt_McaMorf__mDoExt_McaMorf(
-    this->parent.mpMcaMorf, 0x1, modelData, 0, 0,
+  this->parent.mpMcaMorf = mDoExt_McaMorf__mDoExt_McaMorf(
+    mcaMorf, 0x1, modelData, 0, 0,
     animData, 2, 1.0f, 0, -1, 0x1, 0,
     0x80000, 0x11020022
   );
+  if (this->parent.mpMcaMorf == 0) {
+    return 0;
+  }
   
   this->parent.mpMcaMorf->mpModel->mpUserData = (pointer)this;
   
@@ -45,13 +51,13 @@ void daNPCTest__daNPCTest(NPC_Test_class* this) {
   
   this->parent.mJntCtrl.field_0xc = 0;
   this->parent.mJntCtrl.field_0xb = 0;
-  this->parent.field_0x2cc = 0;
-  this->parent.field_0x2d0 = 0;
+  this->parent.mEventCut.mpActor = 0;
+  this->parent.mEventCut.mpTalkActor = 0;
   this->parent.field_0x32c = 0;
   
-  this->parent.parent.mAttentionFlags[1] = 0xAB;
-  this->parent.parent.mAttentionFlags[3] = 0xA9;
-  this->parent.parent.mInteractFlags = fopAc_ac_c__InteractFlags__Targetable_B | fopAc_ac_c__InteractFlags__Talkable | fopAc_ac_c__InteractFlags__PlayEnemyMusic;
+  this->parent.parent.mAttentionDistances[1] = 0xAB;
+  this->parent.parent.mAttentionDistances[3] = 0xA9;
+  this->parent.parent.mInteractFlags = fopAc_ac_c__InteractFlags__Targetable_B | fopAc_ac_c__InteractFlags__Talkable | fopAc_ac_c__InteractFlags__Enemy;
   
   // Initialize the actor's Bg collision checker (so it stops moving when hitting walls and floors).
   dBgS_Acch__dBgS_Acch(&this->parent.mObjAcch.parent);
@@ -127,7 +133,7 @@ int daNPCTest_Create(NPC_Test_class* this) {
   
   // Set the actor's Cc collision.
   dCcD_Stts__Init(&this->parent.mStts, 0xff, 0xff, &this->parent.parent);
-  this->parent.mCyl.parent.parent.parent.mpStts = &this->parent.mStts.parent;
+  this->parent.mCyl.parent.parent.parent.mpStts = &this->parent.mStts;
   dCcD_Cyl__Set(&this->parent.mCyl, &d_npc__dNpc_cyl_src);
   
   mDoExt_McaMorf__setMorf(this->parent.mpMcaMorf, 0.0f);

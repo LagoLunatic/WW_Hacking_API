@@ -26,6 +26,57 @@ NAMESPACES_TO_NOT_QUALIFY_FOR_FUNCS = NAMESPACES_TO_NOT_QUALIFY + [
   "SComponent",
 ]
 
+ENUM_NAMES_TO_NOT_QUALIFY = [
+  "PhaseState",
+]
+
+DATA_TYPE_TO_BYTE_SIZE = {
+  "u8": 1,
+  "u16": 2,
+  "u32": 4,
+  "s8": 1,
+  "s16": 2,
+  "s32": 4,
+  "char": 1,
+  "short": 2,
+  "int": 4,
+  "long": 4,
+  "unsigned char": 1,
+  "unsigned short": 2,
+  "unsigned int": 4,
+  "unsigned long": 4,
+  "pointer": 4,
+  "float": 4,
+  "double": 8,
+  
+  "struct cXyz": 0xC,
+  "struct csXyz": 6,
+  
+  "GXTexObj": 0x20,
+  "GXTlutObj": 0xC,
+  "struct _GXTexObj": 0x20,
+  "GXTexWrapMode": 1,
+  "GXTexFilter": 1,
+  "GXTexFmt": 1,
+  "GXSpotFn": 4,
+  "GXTlutFmt": 1,
+  "enum _GXDistAttnFn": 4,
+  "TELight": 4,
+  "struct TObject": 4,
+  "J3DAlphaComp": 4,
+  "J3DGXColor": 4,
+  "J3DTevOrder": 4,
+  "OSMessage": 4,
+  "EMountDirection": 4,
+  "__off_t": 4,
+  "__off64_t": 8,
+  "size_t": 4,
+}
+
+DATA_TYPES_TO_IGNORE_ALIGNMENT = [
+  "struct _GXColor",
+]
+
 def clean_symbol_name(symbol_name):
   symbol_name = symbol_name.replace("new[]", "new_array")
   symbol_name = symbol_name.replace("delete[]", "delete_array")
@@ -59,6 +110,8 @@ output_str += "struct cXyz {\n    float x;\n    float y;\n    float z;\n};\n\n"
 output_str += "struct csXyz {\n    short x;\n    short y;\n    short z;\n};\n\n"
 current_enum_name = None
 current_struct_name = None
+current_enum_data_size = None
+offset_in_current_struct = None
 for line in input_str.splitlines():
   comment_match = re.search(r" //| /\*", line)
   if comment_match:
@@ -73,6 +126,16 @@ for line in input_str.splitlines():
   
   line = re.sub(r"[@:\?!]", "_", line)
   line = re.sub(r"\+", "Plus", line)
+  
+  typedef_match = re.search(r"^typedef ([^,]+?) {3,4}([^,;]+);$", line)
+  if typedef_match:
+    base_type_name = typedef_match.group(1)
+    new_type_name = typedef_match.group(2)
+    if new_type_name in DATA_TYPE_TO_BYTE_SIZE:
+      raise Exception("Duplicate data type defined: %s" % new_type_name)
+    if base_type_name in DATA_TYPE_TO_BYTE_SIZE:
+      #print("%s = %s = 0x%02X" % (new_type_name, base_type_name, DATA_TYPE_TO_BYTE_SIZE[base_type_name]))
+      DATA_TYPE_TO_BYTE_SIZE[new_type_name] = DATA_TYPE_TO_BYTE_SIZE[base_type_name]
   
   if line == "typedef struct TVec3<float> TVec3<float>, *PTVec3<float>;":
     line = "//" + line
@@ -111,19 +174,97 @@ for line in input_str.splitlines():
   if struct_def_match:
     current_struct_name = struct_def_match.group(1)
   
-  if current_enum_name is not None and "__" in current_enum_name:
+  if current_enum_name is not None:
     enum_value_match = re.search(r"^    ([^=]+)=([^,]+)(,?)$", line)
     if enum_value_match:
       # We have to add the enum name as a qualifier to the beginning of each enum value to prevent duplicate identifier issues.
       enum_value_name = enum_value_match.group(1)
       enum_value = enum_value_match.group(2)
       maybe_comma = enum_value_match.group(3)
-      enum_value_name = "%s__%s" % (current_enum_name, enum_value_name)
+      if current_enum_name not in ENUM_NAMES_TO_NOT_QUALIFY:
+        enum_value_name = "%s__%s" % (current_enum_name, enum_value_name)
       line = "    %s=%s%s" % (enum_value_name, enum_value, maybe_comma)
+      
+      # Also handle calculating the data size of the enum.
+      this_value_data_size = (int(enum_value).bit_length()+7)//8
+      if this_value_data_size <= 0:
+        this_value_data_size = 1
+      if this_value_data_size >= 3:
+        this_value_data_size = 4
+      if this_value_data_size > current_enum_data_size:
+        current_enum_data_size = this_value_data_size
   
   if current_struct_name in ["profile_method_class", "profile_leaf_method_class"]:
     # Fix the actor methods to take any argument type.
     line = re.sub(r"\(void \*\);$", "();", line)
+  
+  if enum_def_match:
+    current_enum_data_size = 1
+  
+  # Handle adding offset comments to structs.
+  if offset_in_current_struct is not None:
+    field_def_match = re.search(r"^(    )(?:((?:struct |enum )?\S+(?: \*){0,}) (\S+)|(\S+ \(\*+ \S+\)\([^)]*\)));$", line)
+    data_type_size = None
+    if field_def_match:
+      indentation = field_def_match.group(1)
+      data_type = field_def_match.group(2)
+      field_name = field_def_match.group(3)
+      method_field_def = field_def_match.group(4)
+      
+      if method_field_def:
+        # e.g.:
+        # int (* mpCreate)();
+        # void (* mpCallback)(struct fopAc_ac_c *, struct cXyz *, ulong);
+        data_type = "pointer"
+        field_name = ""
+        orig_line_to_keep = method_field_def
+      else:
+        orig_line_to_keep = data_type + " " + field_name
+      
+      #print(data_type, line)
+      if data_type.endswith(" *"):
+        data_type = "pointer"
+      field_array_multiplier = 1
+      while array_field_match := re.search(r"^(.+?)\[(\d+)\]$", field_name):
+        field_name_before_array = array_field_match.group(1)
+        array_size = int(array_field_match.group(2))
+        field_array_multiplier *= array_size
+        field_name = field_name_before_array
+      
+      field_hex_offset_name_match = re.search(r"^field_0x([0-9a-f]+)$", field_name)
+      if field_hex_offset_name_match:
+        correct_offset = int(field_hex_offset_name_match.group(1), 16)
+        if correct_offset != offset_in_current_struct:
+          print("Inaccuracy calculating offset within struct %s! Calculated offset is 0x%02X, but correct offset is 0x%02X." % (current_struct_name, offset_in_current_struct, correct_offset))
+          data_type = "" # Don't continue adding offsets after this field
+      
+      if data_type in DATA_TYPE_TO_BYTE_SIZE:
+        data_type_size = DATA_TYPE_TO_BYTE_SIZE[data_type]
+        if data_type not in DATA_TYPES_TO_IGNORE_ALIGNMENT:
+          if data_type_size == 2 and (offset_in_current_struct % 2) != 0:
+            print("Offset is not halfword aligned at offset 0x%02X in struct %s" % (offset_in_current_struct, current_struct_name))
+          if data_type_size == 4 and (offset_in_current_struct % 4) != 0:
+            print("Offset is not word aligned at offset 0x%02X in struct %s" % (offset_in_current_struct, current_struct_name))
+        
+        data_type_size *= field_array_multiplier
+        if data_type_size == 0:
+          raise Exception("Field data size is zero for data type %s in struct %s" % (data_type, current_struct_name))
+        
+        curr_offset_comment = "/* 0x%02X */ " % offset_in_current_struct
+        field_size_comment = " // 0x%02X bytes" % (data_type_size)
+        line = indentation + curr_offset_comment + orig_line_to_keep + ";" + field_size_comment
+        offset_in_current_struct += data_type_size
+      else:
+        # We don't know the size of this field, so quit showing offsets for the rest of this struct after this field.
+        print("Unknown field data size at offset 0x%02X in struct %s" % (offset_in_current_struct, current_struct_name))
+        offset_in_current_struct = None
+    elif line != "};":
+      # Failed to parse this field, so quit showing offsets for the rest of this struct.
+      print("Failed to parse line at offset 0x%02X in struct %s" % (offset_in_current_struct, current_struct_name))
+      offset_in_current_struct = None
+  
+  if struct_def_match:
+    offset_in_current_struct = 0
   
   if current_struct_name in ["cXyz", "csXyz"]:
     # We added these to the beginning so we don't want them duplicated.
@@ -136,9 +277,15 @@ for line in input_str.splitlines():
     output_str += (line_with_comment + "\n")
   
   if current_enum_name is not None and line == "} %s;" % current_enum_name:
+    if current_enum_data_size is not None and current_enum_data_size != 0:
+      DATA_TYPE_TO_BYTE_SIZE["enum " + current_enum_name] = current_enum_data_size
     current_enum_name = None
+    current_enum_data_size = None
   if current_struct_name is not None and line == "};":
+    if offset_in_current_struct is not None and offset_in_current_struct != 0:
+      DATA_TYPE_TO_BYTE_SIZE["struct " + current_struct_name] = offset_in_current_struct
     current_struct_name = None
+    offset_in_current_struct = None
 
 with open("./vanilla_defines/ww_structs.h", "w") as f:
   f.write(output_str)

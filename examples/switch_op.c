@@ -60,7 +60,7 @@ int daSwOp_Execute(SwitchOperator_class* this) {
   if (this->mEventProgressState == 1) {
     bool eventFinished = dEvent_manager_c__endCheck(&g_dComIfG_gameInfo.mPlay.mEventMgr, this->mEventIndexToStart);
     if (eventFinished) {
-      g_dComIfG_gameInfo.mPlay.mEvtCtrl.field_0xe8 |= 8; // Should go back to checking if any events are ready to play.
+      g_dComIfG_gameInfo.mPlay.mEvtCtrl.mStateFlags |= 8; // Should go back to checking if any events are ready to play.
       this->mEventProgressState++;
     }
     return 1;
@@ -117,7 +117,7 @@ int daSwOp_Execute(SwitchOperator_class* this) {
     dSv_info_c__onSwitch(&g_dComIfG_gameInfo.mSvInfo, this->mSwitchToSet, this->parent.mCurrent.mRoomNo);
     
     if (this->mEventIndexToStart != -1) {
-      if (this->parent.mEvtInfo.field_0x4 == 2) { // TODO: what is field_0x4?
+      if (this->parent.mEvtInfo.mActMode == dEvt__ActorActMode__InDemo) {
         this->mEventProgressState++;
       } else {
         // Start the event.

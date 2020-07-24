@@ -61,7 +61,7 @@ const f_pc_profile__Profile_Actor g_profile_THWOMP = {
   0,
   .mpMtd2 = &l_daThwomp_Method,
   .mStatus = 0,
-  .mActorType = fopAc_ac__Type__Regular,
+  .mActorType = fopAc_ac_c__Type__Regular,
   .mCullType = 0xE,
   0,
   0,

@@ -32,6 +32,9 @@ int createSolidHeap_CB(THWOMP_class* this) {
   // Create the cube model.
   J3DModelData* modelData = dRes_control_c__getRes("Ecube", 4, g_dComIfG_gameInfo.mResCtrl.mObjectInfo, 0x40);
   this->mpModel = mDoExt_J3DModel__create(modelData, 0x80000, 0x11000000);
+  if (this->mpModel == 0) {
+    return 0;
+  }
   this->mpModel->mBaseScale.x = this->parent.mScale.x;
   this->mpModel->mBaseScale.y = this->parent.mScale.y;
   this->mpModel->mBaseScale.z = this->parent.mScale.z;
@@ -85,8 +88,8 @@ int daThwomp_Create(THWOMP_class* this) {
   OSReport("mPos:  (%f, %f, %f)", this->parent.mOld.mPos.x,  this->parent.mOld.mPos.y,  this->parent.mOld.mPos.z);
   OSReport("mPos2: (%f, %f, %f)", this->parent.mNext.mPos.x, this->parent.mNext.mPos.y, this->parent.mNext.mPos.z);
   OSReport("mPos3: (%f, %f, %f)", this->parent.mCurrent.mPos.x, this->parent.mCurrent.mPos.y, this->parent.mCurrent.mPos.z);
-  OSReport("mPos4: (%f, %f, %f)", this->parent.mPos4.x, this->parent.mPos4.y, this->parent.mPos4.z);
-  OSReport("mPos5: (%f, %f, %f)", this->parent.mPos5.x, this->parent.mPos5.y, this->parent.mPos5.z);
+  OSReport("mPos4: (%f, %f, %f)", this->parent.mEyePos.x, this->parent.mEyePos.y, this->parent.mEyePos.z);
+  OSReport("mPos5: (%f, %f, %f)", this->parent.mAttentionPos.x, this->parent.mAttentionPos.y, this->parent.mAttentionPos.z);
   
   return cPhs_COMPLEATE_e;
 }
@@ -136,7 +139,7 @@ int daThwomp_Draw(THWOMP_class* this) {
 
 int daThwomp_Execute(THWOMP_class* this) {
   // Move the entity.
-  cXyz* dest_pos = &g_dComIfG_gameInfo.mPlay.mpCurPlayerActor->mNext.mPos;
+  cXyz* dest_pos = &g_dComIfG_gameInfo.mPlay.mpCurPlayerActor->parent.mNext.mPos;
   float xDiff = fabs(this->parent.mCurrent.mPos.x - dest_pos->x);
   float yDiff = fabs(this->parent.mCurrent.mPos.y - dest_pos->y);
   float zDiff = fabs(this->parent.mCurrent.mPos.z - dest_pos->z);
