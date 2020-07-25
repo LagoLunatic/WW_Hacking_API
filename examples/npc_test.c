@@ -5,6 +5,15 @@
 static void * _ctors SECTION(".ctors");
 static void * _dtors SECTION(".dtors");
 
+// We need asm to properly call __ptmf_scall with the PTMF* in r12.
+void ptmf_scall(PTMF* ptmf, void* this, void* unk) {
+asm("mr %r12, %r3\n\t"
+    "mr %r3,  %r4\n\t"
+    "mr %r4,  %r5\n\t"
+    "b __ptmf_scall\n\t"
+);
+}
+
 void _prolog() {
   DynamicLink__ModuleConstructorsX(&_ctors);
   DynamicLink__ModuleProlog();
@@ -45,6 +54,8 @@ int daNPCTest_createSolidHeap_CB(NPC_Test_class* this) {
 }
 
 void daNPCTest__daNPCTest(NPC_Test_class* this) {
+  OSReport("Test NPC actor at: %08X\n", this);
+  
   fopAc_ac_c__fopAc_ac_c(&this->parent.parent);
   
   dNpc_EventCut_c__setActorInfo2(&this->eventActor, "Md1", &this->parent);
@@ -57,7 +68,7 @@ void daNPCTest__daNPCTest(NPC_Test_class* this) {
   
   this->parent.parent.mAttentionDistances[1] = 0xAB;
   this->parent.parent.mAttentionDistances[3] = 0xA9;
-  this->parent.parent.mInteractFlags = fopAc_ac_c__InteractFlags__Targetable_B | fopAc_ac_c__InteractFlags__Talkable | fopAc_ac_c__InteractFlags__Enemy;
+  this->parent.parent.mInteractFlags = fopAc_ac_c__InteractFlags__Targetable_B | fopAc_ac_c__InteractFlags__Talkable;
   
   // Initialize the actor's Bg collision checker (so it stops moving when hitting walls and floors).
   dBgS_Acch__dBgS_Acch(&this->parent.mObjAcch.parent);
@@ -121,6 +132,12 @@ int daNPCTest_Create(NPC_Test_class* this) {
     dNpc_PathRun_c__incIdxLoop(&this->mPathRun);
   }
   
+  PTMF action;
+  action.this_delta  = daNPCTest__Actions[0].this_delta;
+  action.vtbl_offset = daNPCTest__Actions[0].vtbl_offset;
+  action.func        = daNPCTest__Actions[0].func;
+  daNPCTest__set_action(this, action, 0);
+  
   // Set the actor's Bg collision checker with a half-height of 30 and a radius of 50.
   dBgS_AcchCir__SetWall(&this->parent.mAcchCir, 30.0f, 50.0f);
   dBgS_Acch__Set(&this->parent.mObjAcch.parent,
@@ -167,8 +184,15 @@ int daNPCTest_Draw(NPC_Test_class* this) {
 int daNPCTest_Execute(NPC_Test_class* this) {
   //OSReport("mCurrent pos: (%f, %f, %f)", this->parent.parent.mCurrent.mPos.x, this->parent.parent.mCurrent.mPos.y, this->parent.parent.mCurrent.mPos.z);
   
-  // Play the animation.
-  mDoExt_McaMorf__play(this->parent.mpMcaMorf, &this->parent.parent.mCurrent.mPos, 0, 0);
+  daNPCTest__checkOrder(this);
+  
+  if (this->parent.parent.mEvtInfo.mActMode == dEvt__ActorActMode__InTalk) {
+    ptmf_scall(&this->mCurrAction, this, 0);
+  } else {
+    daNPCTest__event_proc(this);
+  }
+  
+  daNPCTest__eventOrder(this);
   
   // Determine if we've reached the current path point and advance to the next one if so.
   bool reachedCurrPoint = dNpc_PathRun_c__chkPointPass(&this->mPathRun, &this->parent.parent.mCurrent.mPos, this->mPathRun.mGoingForwards);
@@ -185,9 +209,83 @@ int daNPCTest_Execute(NPC_Test_class* this) {
   // Gradually turn towards the desired Y rotation (maximum 0x500 angle units = 7 degrees turned per frame).
   cLib_addCalcAngleS2(&this->parent.parent.mCurrent.mRot.y, outYRot, 1, 0x500);
   
+  // Move forward, but only when they're not the focus of the player's attention.
+  if (!daNPCTest__chkAttention(this)) {
+    this->parent.parent.mVelocityFwd = 10.0f;
+  } else {
+    this->parent.parent.mVelocityFwd = 0.0f;
+  }
+  
   // Update position based on velocity and rotation.
-  this->parent.parent.mVelocityFwd = 10.0f;
   fopAcM_posMoveF(&this->parent.parent, &this->parent.mStts.parent.mCcMove);
+  
+  daNPCTest__setMtx(this, false);
+  
+  // Set the actor's Cc collision with a height of 50 and a radius of 140.
+  fopNpc_npc_c__setCollision(&this->parent, 50.0f, 140.0f);
+  
+  return 1;
+}
+
+void daNPCTest__eventOrder(NPC_Test_class* this) {
+  this->parent.parent.mEvtInfo.mBehaviorFlag |= dEvt__ActorBehaviorFlag__CanTalk;
+}
+
+void daNPCTest__checkOrder(NPC_Test_class* this) {
+  //OSReport("mActMode: %X", this->parent.parent.mEvtInfo.mActMode);
+  
+  if (this->parent.parent.mEvtInfo.mActMode != dEvt__ActorActMode__InTalk) {
+    return;
+  }
+}
+
+void daNPCTest__event_proc(NPC_Test_class* this) {
+  if (!dNpc_EventCut_c__cutProc(&this->eventActor)) {
+    daNPCTest__privateCut(this);
+  }
+}
+
+void daNPCTest__privateCut(NPC_Test_class* this) {
+  int staffId = dEvent_manager_c__getMyStaffId(&g_dComIfG_gameInfo.mPlay.mEventMgr, "NPCTest", 0, 0);
+  if (staffId == -1) {
+    return;
+  }
+  
+  this->mCurrCutIdx = dEvent_manager_c__getMyActIdx(
+    &g_dComIfG_gameInfo.mPlay.mEventMgr,
+    staffId, (char**)&daNPCTest__Cut_Names, daNPCTest__Num_Cuts,
+    1, 0);
+  
+  if (this->mCurrCutIdx == -1) {
+    dEvent_manager_c__cutEnd(&g_dComIfG_gameInfo.mPlay.mEventMgr, staffId);
+    return;
+  }
+  
+  if (dEvent_manager_c__getIsAddvance(&g_dComIfG_gameInfo.mPlay.mEventMgr, staffId)) {
+    if (this->mCurrCutIdx == 0) {
+      daNPCTest__event_actionInit(this, staffId);
+    }
+  }
+  
+  if (this->mCurrCutIdx == 0) {
+    daNPCTest__event_action(this);
+  } else {
+    dEvent_manager_c__cutEnd(&g_dComIfG_gameInfo.mPlay.mEventMgr, staffId);
+  }
+}
+
+
+void daNPCTest__event_actionInit(NPC_Test_class* this, int staffId) {
+  // TODO handle initializing event cuts, get substances etc
+}
+
+void daNPCTest__event_action(NPC_Test_class* this) {
+  // TODO handle event cuts
+}
+
+void daNPCTest__setMtx(NPC_Test_class* this, bool unk) {
+  // Play the animation.
+  mDoExt_McaMorf__play(this->parent.mpMcaMorf, &this->parent.parent.mCurrent.mPos, 0, 0);
   
   // Correct this actor's position relative to Bg collision (walkable collision such as floors or walls it may have run into).
   dBgS_Acch__CrrPos(&this->parent.mObjAcch.parent, &g_dComIfG_gameInfo.mPlay.mBgS);
@@ -200,10 +298,30 @@ int daNPCTest_Execute(NPC_Test_class* this) {
   // Calculate how the vertices should be deformed by the animation.
   mDoExt_McaMorf__calc(this->parent.mpMcaMorf);
   
-  // Set the actor's Cc collision with a height of 50 and a radius of 140.
-  fopNpc_npc_c__setCollision(&this->parent, 50.0f, 140.0f);
+  daNPCTest__setAttention(this, unk);
+}
+
+bool daNPCTest__chkAttention(NPC_Test_class* this) {
+  if (dAttention_c__LockonTruth(&g_dComIfG_gameInfo.mPlay.mAttention)) {
+    fopAc_ac_c* lockedOnActor = dAttention_c__LockonTarget(&g_dComIfG_gameInfo.mPlay.mAttention, 0);
+    return ((fopAc_ac_c*)this == lockedOnActor);
+  } else {
+    fopAc_ac_c* lookedAtActor = dAttention_c__ActionTarget(&g_dComIfG_gameInfo.mPlay.mAttention, 0);
+    return ((fopAc_ac_c*)this == lookedAtActor);
+  }
+}
+
+void daNPCTest__setAttention(NPC_Test_class* this, bool unk) {
+  // Set the position of the yellow targeting arrow that appears above the NPC.
+  this->parent.parent.mAttentionPos.x = this->parent.parent.mCurrent.mPos.x;
+  this->parent.parent.mAttentionPos.y = this->parent.parent.mCurrent.mPos.y + 150.0f;
+  this->parent.parent.mAttentionPos.z = this->parent.parent.mCurrent.mPos.z;
   
-  return 1;
+  // Set the position Link looks at when locked on to the NPC.
+  // TODO: This is just a quick hack. Vanilla NPCs set this in a more complex way, presumably to account for the head's rotation.
+  this->parent.parent.mEyePos.x = this->parent.parent.mCurrent.mPos.x;
+  this->parent.parent.mEyePos.y = this->parent.parent.mCurrent.mPos.y + 100.0f;
+  this->parent.parent.mEyePos.z = this->parent.parent.mCurrent.mPos.z;
 }
 
 int daNPCTest__next_msgStatus(NPC_Test_class* this, ulong* msgIDPtr) {
@@ -211,13 +329,58 @@ int daNPCTest__next_msgStatus(NPC_Test_class* this, ulong* msgIDPtr) {
 }
 
 ulong daNPCTest__getMsg(NPC_Test_class* this) {
+  //OSReport("getMsg called");
+  
   if(dKy_daynight_check()) {
 	  return 0;
+  }
+  
+  return 6227;
+}
+
+void daNPCTest__anmAtr(NPC_Test_class* this, ushort unk) {
+  return;
+}
+
+int daNPCTest__set_action(NPC_Test_class* this, PTMF new_action, void* unk) {
+  if (!__ptmf_cmpr(&this->mCurrAction, &new_action)) {
+    // New action is the same as current action. Do nothing.
+    return 1;
+  }
+  
+  if (__ptmf_test(&this->mCurrAction)) {
+    // Current action has already been initialized.
+    ptmf_scall(&this->mCurrAction, this, unk);
+  }
+  
+  this->mCurrAction.this_delta  = new_action.this_delta;
+  this->mCurrAction.vtbl_offset = new_action.vtbl_offset;
+  this->mCurrAction.func        = new_action.func;
+  ptmf_scall(&this->mCurrAction, this, unk);
+  
+  return 1;
+}
+
+void daNPCTest__wait_action(NPC_Test_class* this, void* unk) {
+  //OSReport("Wait action called");
+  
+  daNPCTest__talk(this);
+}
+
+int daNPCTest__talk(NPC_Test_class* this) {
+  fopNpc_npc_c__talk(&this->parent, true);
+  
+  if (this->parent.mpCurrMsg == 0) {
+    return 1;
+  }
+  
+  if (this->parent.mpCurrMsg->mMode == 19) {
+    daNPCTest__endEvent(this);
   }
   
   return 1;
 }
 
-void daNPCTest__anmAtr(NPC_Test_class* this, ushort unk) {
-  return;
+void daNPCTest__endEvent(NPC_Test_class* this) {
+  g_dComIfG_gameInfo.mPlay.mEvtCtrl.mStateFlags |= 8;
 }

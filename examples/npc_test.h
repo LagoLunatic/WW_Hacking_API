@@ -5,6 +5,9 @@ typedef struct NPC_Test_class {
   
   request_of_phase_process_class mPhaseRequest;
   dNpc_PathRun_c mPathRun;
+  
+  PTMF mCurrAction;
+  s8 mCurrCutIdx;
 } NPC_Test_class;
 
 void _prolog();
@@ -15,9 +18,22 @@ int daNPCTest_IsDelete(NPC_Test_class* this);
 int daNPCTest_Delete(NPC_Test_class* this);
 int daNPCTest_Draw(NPC_Test_class* this);
 int daNPCTest_Execute(NPC_Test_class* this);
+void daNPCTest__eventOrder(NPC_Test_class* this);
+void daNPCTest__checkOrder(NPC_Test_class* this);
+void daNPCTest__event_proc(NPC_Test_class* this);
+void daNPCTest__privateCut(NPC_Test_class* this);
+void daNPCTest__event_actionInit(NPC_Test_class* this, int staffId);
+void daNPCTest__event_action(NPC_Test_class* this);
+void daNPCTest__setMtx(NPC_Test_class* this, bool unk);
+bool daNPCTest__chkAttention(NPC_Test_class* this);
+void daNPCTest__setAttention(NPC_Test_class* this, bool unk);
 int daNPCTest__next_msgStatus(NPC_Test_class* this, ulong* msgIDPtr);
 ulong daNPCTest__getMsg(NPC_Test_class* this);
 void daNPCTest__anmAtr(NPC_Test_class* this, ushort unk);
+int daNPCTest__set_action(NPC_Test_class* this, PTMF action, void* unk);
+void daNPCTest__wait_action(NPC_Test_class* this, void* unk);
+int daNPCTest__talk(NPC_Test_class* this);
+void daNPCTest__endEvent(NPC_Test_class* this);
 
 profile_method_class l_daNPCTest_Method = {
   .parent = {
@@ -64,4 +80,17 @@ const fopNpc_npc_c__vtbl daNpc_Test_c_vtbl = {
   .next_msgStatus = (pointer)&daNPCTest__next_msgStatus,
   .getMsg = (pointer)&daNPCTest__getMsg,
   .anmAtr = (pointer)&daNPCTest__anmAtr,
+};
+
+const PTMF daNPCTest__Actions[] = {
+  {
+    .this_delta = 0,
+    .vtbl_offset = -1,
+    .func = (pointer)&daNPCTest__wait_action,
+  },
+};
+
+#define daNPCTest__Num_Cuts 1
+const char* daNPCTest__Cut_Names[daNPCTest__Num_Cuts] = {
+  "DUMMY_CUT",
 };

@@ -18,6 +18,7 @@ ALLOWED_SECTIONS = [
   ".bss",
   ".rodata.str1.4",
   ".rodata.cst4",
+  ".sdata",
 ]
 
 def convert_elf_to_rel(in_elf_path, out_rel_path, rel_id, actor_profile_name, rels_arc_path=None):
