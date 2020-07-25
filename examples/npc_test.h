@@ -6,7 +6,7 @@ typedef struct NPC_Test_class {
   request_of_phase_process_class mPhaseRequest;
   dNpc_PathRun_c mPathRun;
   
-  PTMF mCurrAction;
+  int mCurrActionIndex;
   s8 mCurrCutIdx;
 } NPC_Test_class;
 
@@ -30,8 +30,7 @@ void daNPCTest__setAttention(NPC_Test_class* this, bool unk);
 int daNPCTest__next_msgStatus(NPC_Test_class* this, ulong* msgIDPtr);
 ulong daNPCTest__getMsg(NPC_Test_class* this);
 void daNPCTest__anmAtr(NPC_Test_class* this, ushort unk);
-int daNPCTest__set_action(NPC_Test_class* this, PTMF action, void* unk);
-void daNPCTest__wait_action(NPC_Test_class* this, void* unk);
+void daNPCTest__wait_action(NPC_Test_class* this);
 int daNPCTest__talk(NPC_Test_class* this);
 void daNPCTest__endEvent(NPC_Test_class* this);
 
@@ -82,12 +81,8 @@ const fopNpc_npc_c__vtbl daNpc_Test_c_vtbl = {
   .anmAtr = (pointer)&daNPCTest__anmAtr,
 };
 
-const PTMF daNPCTest__Actions[] = {
-  {
-    .this_delta = 0,
-    .vtbl_offset = -1,
-    .func = (pointer)&daNPCTest__wait_action,
-  },
+void (*daNPCTest__Actions[])(NPC_Test_class* this) = {
+  &daNPCTest__wait_action,
 };
 
 #define daNPCTest__Num_Cuts 1

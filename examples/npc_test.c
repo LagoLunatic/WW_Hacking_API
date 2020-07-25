@@ -5,15 +5,6 @@
 static void * _ctors SECTION(".ctors");
 static void * _dtors SECTION(".dtors");
 
-// We need asm to properly call __ptmf_scall with the PTMF* in r12.
-void ptmf_scall(PTMF* ptmf, void* this, void* unk) {
-asm("mr %r12, %r3\n\t"
-    "mr %r3,  %r4\n\t"
-    "mr %r4,  %r5\n\t"
-    "b __ptmf_scall\n\t"
-);
-}
-
 void _prolog() {
   DynamicLink__ModuleConstructorsX(&_ctors);
   DynamicLink__ModuleProlog();
@@ -132,12 +123,6 @@ int daNPCTest_Create(NPC_Test_class* this) {
     dNpc_PathRun_c__incIdxLoop(&this->mPathRun);
   }
   
-  PTMF action;
-  action.this_delta  = daNPCTest__Actions[0].this_delta;
-  action.vtbl_offset = daNPCTest__Actions[0].vtbl_offset;
-  action.func        = daNPCTest__Actions[0].func;
-  daNPCTest__set_action(this, action, 0);
-  
   // Set the actor's Bg collision checker with a half-height of 30 and a radius of 50.
   dBgS_AcchCir__SetWall(&this->parent.mAcchCir, 30.0f, 50.0f);
   dBgS_Acch__Set(&this->parent.mObjAcch.parent,
@@ -187,7 +172,7 @@ int daNPCTest_Execute(NPC_Test_class* this) {
   daNPCTest__checkOrder(this);
   
   if (this->parent.parent.mEvtInfo.mActMode == dEvt__ActorActMode__InTalk) {
-    ptmf_scall(&this->mCurrAction, this, 0);
+    daNPCTest__Actions[this->mCurrActionIndex](this);
   } else {
     daNPCTest__event_proc(this);
   }
@@ -342,26 +327,7 @@ void daNPCTest__anmAtr(NPC_Test_class* this, ushort unk) {
   return;
 }
 
-int daNPCTest__set_action(NPC_Test_class* this, PTMF new_action, void* unk) {
-  if (!__ptmf_cmpr(&this->mCurrAction, &new_action)) {
-    // New action is the same as current action. Do nothing.
-    return 1;
-  }
-  
-  if (__ptmf_test(&this->mCurrAction)) {
-    // Current action has already been initialized.
-    ptmf_scall(&this->mCurrAction, this, unk);
-  }
-  
-  this->mCurrAction.this_delta  = new_action.this_delta;
-  this->mCurrAction.vtbl_offset = new_action.vtbl_offset;
-  this->mCurrAction.func        = new_action.func;
-  ptmf_scall(&this->mCurrAction, this, unk);
-  
-  return 1;
-}
-
-void daNPCTest__wait_action(NPC_Test_class* this, void* unk) {
+void daNPCTest__wait_action(NPC_Test_class* this) {
   //OSReport("Wait action called");
   
   daNPCTest__talk(this);
