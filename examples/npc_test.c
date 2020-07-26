@@ -39,6 +39,15 @@ int daNPCTest_createSolidHeap_CB(NPC_Test_class* this) {
     return 0;
   }
   
+  this->mHeadJntIdx = JUTNameTab__getIndex(modelData->mJointTree.mpNameTable, "head");
+  this->mSpineJntIdx = JUTNameTab__getIndex(modelData->mJointTree.mpNameTable, "backbone1");
+  
+  for (int i = 0; i < modelData->mJointTree.mJointCount; i++) {
+    if (i == this->mHeadJntIdx || i == this->mSpineJntIdx) {
+      modelData->mJointTree.mpJoints[i]->parent.mpCalcCallBack = (pointer)&daNPCTest_nodeCallBack;
+    }
+  }
+  
   this->parent.mpMcaMorf->mpModel->mpUserData = (pointer)this;
   
   return 1;
@@ -169,10 +178,27 @@ int daNPCTest_Draw(NPC_Test_class* this) {
 int daNPCTest_Execute(NPC_Test_class* this) {
   //OSReport("mCurrent pos: (%f, %f, %f)", this->parent.parent.mCurrent.mPos.x, this->parent.parent.mCurrent.mPos.y, this->parent.parent.mCurrent.mPos.z);
   
+  dNpc_JntCtrl_c__setParam(
+    &this->parent.mJntCtrl,
+    daNPCTest__JntCtrl_Params.unk_0x08, daNPCTest__JntCtrl_Params.mMaxSpineRot,
+    daNPCTest__JntCtrl_Params.unk_0x0C, daNPCTest__JntCtrl_Params.mMinSpineRot,
+    daNPCTest__JntCtrl_Params.unk_0x00, daNPCTest__JntCtrl_Params.mMaxHeadRot,
+    daNPCTest__JntCtrl_Params.unk_0x04, daNPCTest__JntCtrl_Params.mMinHeadRot,
+    daNPCTest__JntCtrl_Params.unk_0x10
+  );
+  
   daNPCTest__checkOrder(this);
+  
+  // Move forward, but only when they're not the focus of the player's attention.
+  if (!daNPCTest__chkAttention(this)) {
+    this->parent.parent.mVelocityFwd = 10.0f;
+  } else {
+    this->parent.parent.mVelocityFwd = 0.0f;
+  }
   
   if (this->parent.parent.mEvtInfo.mActMode == dEvt__ActorActMode__InTalk) {
     daNPCTest__Actions[this->mCurrActionIndex](this);
+    //this->parent.parent.mVelocityFwd = 0.0f;
   } else {
     daNPCTest__event_proc(this);
   }
@@ -193,13 +219,6 @@ int daNPCTest_Execute(NPC_Test_class* this) {
   
   // Gradually turn towards the desired Y rotation (maximum 0x500 angle units = 7 degrees turned per frame).
   cLib_addCalcAngleS2(&this->parent.parent.mCurrent.mRot.y, outYRot, 1, 0x500);
-  
-  // Move forward, but only when they're not the focus of the player's attention.
-  if (!daNPCTest__chkAttention(this)) {
-    this->parent.parent.mVelocityFwd = 10.0f;
-  } else {
-    this->parent.parent.mVelocityFwd = 0.0f;
-  }
   
   // Update position based on velocity and rotation.
   fopAcM_posMoveF(&this->parent.parent, &this->parent.mStts.parent.mCcMove);
@@ -228,6 +247,8 @@ void daNPCTest__event_proc(NPC_Test_class* this) {
   if (!dNpc_EventCut_c__cutProc(&this->eventActor)) {
     daNPCTest__privateCut(this);
   }
+  
+  daNPCTest__lookBack(this);
 }
 
 void daNPCTest__privateCut(NPC_Test_class* this) {
@@ -299,7 +320,7 @@ bool daNPCTest__chkAttention(NPC_Test_class* this) {
 void daNPCTest__setAttention(NPC_Test_class* this, bool unk) {
   // Set the position of the yellow targeting arrow that appears above the NPC.
   this->parent.parent.mAttentionPos.x = this->parent.parent.mCurrent.mPos.x;
-  this->parent.parent.mAttentionPos.y = this->parent.parent.mCurrent.mPos.y + 150.0f;
+  this->parent.parent.mAttentionPos.y = this->parent.parent.mCurrent.mPos.y + daNPCTest__JntCtrl_Params.mAttArrowYOffset;
   this->parent.parent.mAttentionPos.z = this->parent.parent.mCurrent.mPos.z;
   
   // Set the position Link looks at when locked on to the NPC.
@@ -331,6 +352,8 @@ void daNPCTest__wait_action(NPC_Test_class* this) {
   //OSReport("Wait action called");
   
   daNPCTest__talk(this);
+  
+  daNPCTest__lookBack(this);
 }
 
 int daNPCTest__talk(NPC_Test_class* this) {
@@ -349,4 +372,61 @@ int daNPCTest__talk(NPC_Test_class* this) {
 
 void daNPCTest__endEvent(NPC_Test_class* this) {
   g_dComIfG_gameInfo.mPlay.mEvtCtrl.mStateFlags |= 8;
+}
+
+void daNPCTest__lookBack(NPC_Test_class* this) {
+  cXyz dstPos;
+  cXyz srcPos = {
+      this->parent.parent.mCurrent.mPos.x,
+      this->parent.parent.mEyePos.y,
+      this->parent.parent.mCurrent.mPos.z,
+  };
+  
+  dNpc_playerEyePos(-20.0f, &dstPos);
+  
+  if (this->parent.mJntCtrl.field_0xa == 0) {
+    this->mMaxFollowRotVel = 0;
+  } else {
+    cLib_addCalcAngleS2(
+      &this->mMaxFollowRotVel,
+      daNPCTest__JntCtrl_Params.mDesiredFollowRotVel,
+      4, 0x800
+    );
+  }
+  
+  dNpc_JntCtrl_c__lookAtTarget(
+    &this->parent.mJntCtrl, &this->parent.parent.mCurrent.mRot.y,
+    &dstPos, &srcPos,
+    this->parent.parent.mCurrent.mRot.y,
+    this->mMaxFollowRotVel, daNPCTest__JntCtrl_Params.headOnlyFollow
+  );
+}
+
+int daNPCTest_nodeCallBack(J3DNode* node, int unk) {
+  if (unk) {
+    return 1;
+  }
+  
+  J3DModel* model = J3DGraphBase__j3dSys.mpCurModel;
+  NPC_Test_class* this = (NPC_Test_class*)model->mpUserData;
+  if (!this) {
+    return 1;
+  }
+  
+  // Update this node's transform.
+  PSMTXCopy(&model->mpNodeMtx[node->mAnmMatrixIdx], &mDoMtx_stack_c__now);
+  
+  if (node->mAnmMatrixIdx == this->mHeadJntIdx) {
+    // TODO: eye pos offset with PSMTXMultVec
+    mDoMtx_XrotM(&mDoMtx_stack_c__now, this->parent.mJntCtrl.mHeadLeftRightRot);
+    mDoMtx_ZrotM(&mDoMtx_stack_c__now, this->parent.mJntCtrl.mHeadUpDownRot);
+  } else if (node->mAnmMatrixIdx == this->mSpineJntIdx) {
+    mDoMtx_XrotM(&mDoMtx_stack_c__now, this->parent.mJntCtrl.mBackboneLeftRightRot);
+    mDoMtx_ZrotM(&mDoMtx_stack_c__now, this->parent.mJntCtrl.mBackboneUpDownRot);
+  }
+  
+  PSMTXCopy(&mDoMtx_stack_c__now, &J3DSys__mCurrentMtx);
+  PSMTXCopy(&mDoMtx_stack_c__now, &model->mpNodeMtx[node->mAnmMatrixIdx]);
+  
+  return 1;
 }

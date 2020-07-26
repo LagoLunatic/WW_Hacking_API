@@ -8,6 +8,10 @@ typedef struct NPC_Test_class {
   
   int mCurrActionIndex;
   s8 mCurrCutIdx;
+  
+  short mMaxFollowRotVel;
+  s8 mHeadJntIdx;
+  s8 mSpineJntIdx;
 } NPC_Test_class;
 
 void _prolog();
@@ -33,6 +37,8 @@ void daNPCTest__anmAtr(NPC_Test_class* this, ushort unk);
 void daNPCTest__wait_action(NPC_Test_class* this);
 int daNPCTest__talk(NPC_Test_class* this);
 void daNPCTest__endEvent(NPC_Test_class* this);
+void daNPCTest__lookBack(NPC_Test_class* this);
+int daNPCTest_nodeCallBack(J3DNode* node, int unk);
 
 profile_method_class l_daNPCTest_Method = {
   .parent = {
@@ -88,4 +94,42 @@ void (*daNPCTest__Actions[])(NPC_Test_class* this) = {
 #define daNPCTest__Num_Cuts 1
 const char* daNPCTest__Cut_Names[daNPCTest__Num_Cuts] = {
   "DUMMY_CUT",
+};
+
+struct JntCtrl_Params {
+  short mMaxHeadRot;
+  short mMinHeadRot;
+  short mMaxSpineRot;
+  short mMinSpineRot;
+  
+  short unk_0x00;
+  short unk_0x04;
+  short unk_0x08;
+  short unk_0x0C;
+  short unk_0x10;
+  
+  short mDesiredFollowRotVel;
+  
+  float mAttArrowYOffset;
+  
+  bool headOnlyFollow;
+};
+const struct JntCtrl_Params daNPCTest__JntCtrl_Params = {
+  .mMaxHeadRot =  0x2000,
+  .mMinHeadRot = -0x2000,
+  .mMaxSpineRot =  0x1800,
+  .mMinSpineRot = -0x1800,
+  
+  .unk_0x00 =  0x2000,
+  .unk_0x04 = -0x1000,
+  .unk_0x08 =  0x0000,
+  .unk_0x0C =  0x0000,
+  
+  .unk_0x10 =  0x0708,
+  
+  .mDesiredFollowRotVel =  0x0800,
+  
+  .mAttArrowYOffset =  150.0f,
+  
+  .headOnlyFollow = true,
 };
