@@ -26,12 +26,12 @@ int daNPCTest_Create(NPC_Test_class* this) {
   // Run the constructor if it hasn't already been run.
   if ((this->parent.parent.mMiscFlags & fopAc_ac_c__MiscFlags__Constructed) == 0) {
     daNPCTest__daNPCTest(this);
-	
-	// Mark that the constructor has run.
+    
+    // Mark that the constructor has run.
     this->parent.parent.mMiscFlags |= fopAc_ac_c__MiscFlags__Constructed;
   }
   
-  // Check if loading has finished
+  // Load the archive.
   PhaseState phaseState = dComIfG_resLoad(&this->mPhaseRequest, "Md");
   if (phaseState != cPhs_COMPLEATE_e) {
     // Not finished loading yet, check again next frame.
@@ -40,10 +40,9 @@ int daNPCTest_Create(NPC_Test_class* this) {
   
   // Try to load our resources into memory...
   int maxHeapMemoryNeeded = 0; // No maximum
-  int error = fopAcM_entrySolidHeap(&this->parent.parent, (int (*)(fopAc_ac_c *))&daNPCTest_createSolidHeap_CB, maxHeapMemoryNeeded);
-  
-  if (error == 0) {
-	// Failed to load resources, error out!
+  int success = fopAcM_entrySolidHeap(&this->parent.parent, (int (*)(fopAc_ac_c *))&daNPCTest_createSolidHeap_CB, maxHeapMemoryNeeded);
+  if (success == 0) {
+    // Failed to load resources, error out!
     return cPhs_ERROR_e;
   }
   
@@ -52,7 +51,7 @@ int daNPCTest_Create(NPC_Test_class* this) {
   
   // Since we're an actor that can follow a path, try to create the stuff for that.
   if (daNPCTest__InitPath(this) == cPhs_ERROR_e) {
-	  return cPhs_ERROR_e;
+    return cPhs_ERROR_e;
   }
   
   // Set the actor's Bg collision checker with a half-height of 30 and a radius of 50.
@@ -208,7 +207,7 @@ void daNPCTest__InitJntCtrl(NPC_Test_class* this, J3DModelData* modelData) {
   // This involves calculating a rotation value needed to have the head joint point towards Link and blending that with the model's current animation
   // to make it look more natural. This function will set us up to do that.
   
-  // Grab and store the IDs of the head and spine joints in our model.
+  // Grab and store the indices of the head and spine joints in our model.
   this->mHeadJntIdx = JUTNameTab__getIndex(modelData->mJointTree.mpNameTable, "head");
   this->mSpineJntIdx = JUTNameTab__getIndex(modelData->mJointTree.mpNameTable, "backbone1");
   
@@ -418,7 +417,7 @@ ulong daNPCTest__getMsg(NPC_Test_class* this) {
   //OSReport("getMsg called");
   
   if(dKy_daynight_check()) {
-	  return 0;
+    return 0;
   }
   
   return 6227;
