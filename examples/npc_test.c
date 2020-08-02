@@ -32,7 +32,7 @@ int daNPCTest_Create(NPC_Test_class* this) {
   }
   
   // Load the archive.
-  PhaseState phaseState = dComIfG_resLoad(&this->mPhaseRequest, "Md");
+  PhaseState phaseState = dComIfG_resLoad(&this->mPhaseRequest, RES_NAME);
   if (phaseState != cPhs_COMPLEATE_e) {
     // Not finished loading yet, check again next frame.
     return phaseState;
@@ -133,7 +133,7 @@ int daNPCTest_IsDelete(NPC_Test_class* this) {
 }
 
 int daNPCTest_Delete(NPC_Test_class* this) {
-  dComIfG_resDelete(&this->mPhaseRequest, "Md");
+  dComIfG_resDelete(&this->mPhaseRequest, RES_NAME);
   
   return 1;
 }
@@ -172,9 +172,9 @@ void daNPCTest__daNPCTest(NPC_Test_class* this) {
 int daNPCTest_createSolidHeap_CB(NPC_Test_class* this) {
   // Load the model and running animation from res/Object/Md.arc (Medli's archive).
   // Model is file ID 0x5C within the archive.
-  J3DModelData* modelData = dRes_control_c__getIDRes("Md", 0x5C, g_dComIfG_gameInfo.mResCtrl.mObjectInfo, 0x40);
+  J3DModelData* modelData = dRes_control_c__getIDRes(RES_NAME, MODEL_ID, g_dComIfG_gameInfo.mResCtrl.mObjectInfo, 0x40);
   // Running animation is file ID 0x1E.
-  J3DAnmTransformKey* animData = dRes_control_c__getIDRes("Md", 0x1E, g_dComIfG_gameInfo.mResCtrl.mObjectInfo, 0x40);
+  J3DAnmTransformKey* animData = dRes_control_c__getIDRes(RES_NAME, RUN_ANM_ID, g_dComIfG_gameInfo.mResCtrl.mObjectInfo, 0x40);
   
   // Create a new instance of the animation manager. It will handle updating and transitioning between animations for us.
   mDoExt_McaMorf* mcaMorf = (mDoExt_McaMorf*)JKernel__operator_new(sizeof(mDoExt_McaMorf));
@@ -208,8 +208,8 @@ void daNPCTest__InitJntCtrl(NPC_Test_class* this, J3DModelData* modelData) {
   // to make it look more natural. This function will set us up to do that.
   
   // Grab and store the indices of the head and spine joints in our model.
-  this->mHeadJntIdx = JUTNameTab__getIndex(modelData->mJointTree.mpNameTable, "head");
-  this->mSpineJntIdx = JUTNameTab__getIndex(modelData->mJointTree.mpNameTable, "backbone1");
+  this->mHeadJntIdx = JUTNameTab__getIndex(modelData->mJointTree.mpNameTable, HEAD_JNT_NAME);
+  this->mSpineJntIdx = JUTNameTab__getIndex(modelData->mJointTree.mpNameTable, SPINE_JNT_NAME);
   
   // Iterate through all the joints in the mesh.
   // If we find our head or spine joints, we'll register a callback with them.
