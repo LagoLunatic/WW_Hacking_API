@@ -1,4 +1,12 @@
 
+#define RES_NAME "Md"
+
+#define MODEL_ID 0x5C
+#define RUN_ANM_ID 0x1E
+
+#define HEAD_JNT_NAME "head"
+#define SPINE_JNT_NAME "backbone1"
+
 #include "../vanilla_defines/ww_defines.h"
 #include "./npc_test.h"
 
