@@ -14,37 +14,61 @@ typedef struct NPC_Test_class {
   s8 mSpineJntIdx;
 } NPC_Test_class;
 
+/** REL LINK FUNCTIONS **/
+/** Called to link and unlink the REL. Don't change these! **/
 void _prolog();
 void _epilog();
 void _unresolved();
+
+/** INTERFACE FUNCTIONS **/
+/** Called directly by the game for construction, destruction, and updating. **/
 int daNPCTest_Create(NPC_Test_class* this);
+int daNPCTest_Execute(NPC_Test_class* this);
+int daNPCTest_Draw(NPC_Test_class* this);
 int daNPCTest_IsDelete(NPC_Test_class* this);
 int daNPCTest_Delete(NPC_Test_class* this);
-int daNPCTest_Draw(NPC_Test_class* this);
-int daNPCTest_Execute(NPC_Test_class* this);
+
+/** CONSTRUCTION FUNCTIONS **/
+/** These set up our actor when it's first created. **/
+void daNPCTest__daNPCTest(NPC_Test_class* this);
+int daNPCTest_createSolidHeap_CB(NPC_Test_class* this);
+void daNPCTest__InitCollision(NPC_Test_class* this);
+int daNPCTest__InitPath(NPC_Test_class* this);
+void daNPCTest__InitJntCtrl(NPC_Test_class* this, J3DModelData* modelData);
+
+/** EXECUTION STATE FUNCTIONS **/
+/** These handle the actor's frame to frame execution state - whether it's waiting, walking, talking, etc. **/
+void daNPCTest__wait_action(NPC_Test_class* this);
+int daNPCTest__talk(NPC_Test_class* this);
+void daNPCTest__UpdatePathFollowing(NPC_Test_class* this);
+void daNPCTest__setMtx(NPC_Test_class* this, bool unk);
+
+/** ATTENTION FUNCTIONS **/
+/** These handle Link's ability to interact with the actor - L-targeting, talking to it, etc. as well as the NPC's ability to react to Link's presence. **/
+bool daNPCTest__chkAttention(NPC_Test_class* this);
+void daNPCTest__setAttention(NPC_Test_class* this, bool unk);
+int daNPCTest_nodeCallBack(J3DNode* node, int unk);
+void daNPCTest__lookBack(NPC_Test_class* this);
+
+/** MESSAGE FUNCTIONS **/
+/** In NPCs that can speak, these handle the flow of the conversation. **/
+ulong daNPCTest__getMsg(NPC_Test_class* this);
+int daNPCTest__next_msgStatus(NPC_Test_class* this, ulong* msgIDPtr);
+
+/** EVENT FUNCTIONS **/
+/** These handle how the actor participates in the game's event system, like being talked to or having event actions executed. **/
 void daNPCTest__eventOrder(NPC_Test_class* this);
 void daNPCTest__checkOrder(NPC_Test_class* this);
 void daNPCTest__event_proc(NPC_Test_class* this);
 void daNPCTest__privateCut(NPC_Test_class* this);
 void daNPCTest__event_actionInit(NPC_Test_class* this, int staffId);
 void daNPCTest__event_action(NPC_Test_class* this);
-void daNPCTest__setMtx(NPC_Test_class* this, bool unk);
-bool daNPCTest__chkAttention(NPC_Test_class* this);
-void daNPCTest__setAttention(NPC_Test_class* this, bool unk);
-int daNPCTest__next_msgStatus(NPC_Test_class* this, ulong* msgIDPtr);
-ulong daNPCTest__getMsg(NPC_Test_class* this);
-void daNPCTest__anmAtr(NPC_Test_class* this, ushort unk);
-void daNPCTest__wait_action(NPC_Test_class* this);
-int daNPCTest__talk(NPC_Test_class* this);
 void daNPCTest__endEvent(NPC_Test_class* this);
-void daNPCTest__lookBack(NPC_Test_class* this);
-int daNPCTest_nodeCallBack(J3DNode* node, int unk);
 
-void daNPCTest__InitCollision(NPC_Test_class* this);
-int daNPCTest__InitPath(NPC_Test_class* this);
-void daNPCTest__InitJntCtrl(NPC_Test_class* this, J3DModelData* modelData);
+/** MISC FUNCTIONS **/
+/** These don't really fit in a single category. **/
+void daNPCTest__anmAtr(NPC_Test_class* this, ushort unk);
 
-void daNPCTest__UpdatePathFollowing(NPC_Test_class* this);
 
 profile_method_class l_daNPCTest_Method = {
   .parent = {
