@@ -40,6 +40,12 @@ void daNPCTest__endEvent(NPC_Test_class* this);
 void daNPCTest__lookBack(NPC_Test_class* this);
 int daNPCTest_nodeCallBack(J3DNode* node, int unk);
 
+void daNPCTest__InitCollision(NPC_Test_class* this);
+int daNPCTest__InitPath(NPC_Test_class* this);
+void daNPCTest__InitJntCtrl(NPC_Test_class* this, J3DModelData* modelData);
+
+void daNPCTest__UpdatePathFollowing(NPC_Test_class* this);
+
 profile_method_class l_daNPCTest_Method = {
   .parent = {
     .mpCreate = &daNPCTest_Create,
