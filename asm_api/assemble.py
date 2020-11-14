@@ -163,12 +163,26 @@ try:
     with open(patch_path) as f:
       asm = f.read()
     
+    asm_with_includes = ""
+    for line in asm.splitlines():
+      include_match = re.match(r"\.include\s+\"([^\"]+)\"$", line, re.IGNORECASE)
+      if include_match:
+        relative_file_path = include_match.group(1)
+        file_path = os.path.join("./asm_patches", relative_file_path)
+        with open(file_path) as f:
+          included_file_contents = f.read()
+        asm_with_includes += included_file_contents + "\n"
+      else:
+        asm_with_includes += line + "\n"
+    
+    print(asm_with_includes)
+    
     patch_name = os.path.splitext(patch_filename)[0]
     code_chunks[patch_name] = OrderedDict()
     
     most_recent_file_path = None
     most_recent_org_offset = None
-    for line in asm.splitlines():
+    for line in asm_with_includes.splitlines():
       line = re.sub(r";.+$", "", line)
       line = line.strip()
       
