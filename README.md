@@ -29,6 +29,9 @@ Download and install the following:
 
 ### Usage
 
+First, clone the repository with this command:
+`git clone --recurse-submodules https://github.com/LagoLunatic/WW_Hacking_API.git`
+
 You can compile a custom actor into a REL file like so:  
 `py build_rel.py [path to C source file] [REL module ID number in hexadecimal] [actor profile symbol name] [optional: path to RELS.arc to insert the REL into]`
 
