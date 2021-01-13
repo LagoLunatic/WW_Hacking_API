@@ -38,9 +38,10 @@ First, clone the repository with this command:
 
 First, write an ASM patch file with your custom ASM code and put it in the `asm_patches` directory.  
 In these patches, you can use the following pseudo instructions:
-* `.open` specifies the path of the file to edit (relative to the ISO root)
-* `.org` species the address (for main.dol) or the offset (for RELs) at which to insert the custom code into the file
-* `.include` takes the contents of another ASM patch you have written, and inserts it into this one
+* `.open "path/here"` specifies the path of the file to edit (relative to the ISO root)
+* `.org 0x1234` species the address (for main.dol) or the offset (for RELs) at which to insert the custom code into the file
+* `.close` closes the currently open file
+* `.include "path/here"` takes the contents of another ASM patch you have written, and inserts it into this one (relative to the `asm_patches` directory)
 
 Next, run the following command to assemble all of the ASM patches in the `asm_patches` directory into diffs which will be placed in the `asm_patches/patch_diffs` directory:  
 `py asm_api/assemble.py`
