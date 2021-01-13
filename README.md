@@ -31,7 +31,7 @@ Download and install the following:
 
 ### Usage
 
-First, clone the repository with this command:
+First, clone the repository with this command:  
 `git clone --recurse-submodules https://github.com/LagoLunatic/WW_Hacking_API.git`
 
 #### Patching existing ASM code
@@ -42,10 +42,10 @@ In these patches, you can use the following pseudo instructions:
 * `.org` species the address (for main.dol) or the offset (for RELs) at which to insert the custom code into the file
 * `.include` takes the contents of another ASM patch you have written, and inserts it into this one
 
-Next, run the following command to assemble all of the ASM patches in the `asm_patches` directory into diffs which will be placed in the `asm_patches/patch_diffs` directory:
+Next, run the following command to assemble all of the ASM patches in the `asm_patches` directory into diffs which will be placed in the `asm_patches/patch_diffs` directory:  
 `py asm_api/assemble.py`
 
-Finally, run this command to apply the patch diffs to the files in the ISO, and output all of the files that were modified to a folder with the proper directory structure (unchanged files will not be written):
+Finally, run this command to apply the patch diffs to the files in the ISO, and output all of the files that were modified to a folder with the proper directory structure (unchanged files will not be written):  
 `py asmpatch.py [path to clean WW ISO file] [path to modified output extracted ISO folder]`
 
 #### Creating custom C actors
