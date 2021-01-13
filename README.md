@@ -3,8 +3,10 @@
 
 This is a work-in-progress API for writing custom code for The Legend of Zelda: The Wind Waker (USA GameCube version).
 
-Currently, it allows you to create brand new actors from scratch coded in C, and will compile them into GameCube REL files.  
-It can also insert those REL files into the game, replacing an existing actor.  
+Features:
+* Writing ASM patches to edit the game's existing code (in both main.dol and REL files)
+* Creating brand new actors from scratch coded in C, and compiling them into REL files
+* Replacing existing actors from the game with your new custom actors
 In the future it will also allow adding as many new actors as you want into the game without having to replace existing ones.  
 
 The C code you write can call the vanilla game's functions and use its global variables seamlessly, for example:
@@ -31,6 +33,22 @@ Download and install the following:
 
 First, clone the repository with this command:
 `git clone --recurse-submodules https://github.com/LagoLunatic/WW_Hacking_API.git`
+
+#### Patching existing ASM code
+
+First, write an ASM patch file with your custom ASM code and put it in the `asm_patches` directory.  
+In these patches, you can use the following pseudo instructions:
+* `.open` specifies the path of the file to edit (relative to the ISO root)
+* `.org` species the address (for main.dol) or the offset (for RELs) at which to insert the custom code into the file
+* `.include` takes the contents of another ASM patch you have written, and inserts it into this one
+
+Next, run the following command to assemble all of the ASM patches in the `asm_patches` directory into diffs which will be placed in the `asm_patches/patch_diffs` directory:
+`py asm_api/assemble.py`
+
+Finally, run this command to apply the patch diffs to the files in the ISO, and output all of the files that were modified to a folder with the proper directory structure (unchanged files will not be written):
+`py asmpatch.py [path to clean WW ISO file] [path to modified output extracted ISO folder]`
+
+#### Creating custom C actors
 
 You can compile a custom actor into a REL file like so:  
 `py build_rel.py [path to C source file] [REL module ID number in hexadecimal] [actor profile symbol name] [optional: path to RELS.arc to insert the REL into]`
