@@ -39,7 +39,8 @@ First, clone the repository with this command:
 First, write an ASM patch file with your custom ASM code and put it in the `asm_patches` directory.  
 In these patches, you can use the following pseudo instructions:
 * `.open "path/here"` specifies the path of the file to edit (relative to the ISO root)
-* `.org 0x1234` species the address (for main.dol) or the offset (for RELs) at which to insert the custom code into the file
+* `.org 0x1234` specifies the address (for main.dol) or the offset (for RELs) at which to write the custom code
+* `.org @NextFreeSpace` specifies that the following code should be written in a chunk of free space, the location of which will be determined automatically by the assembler
 * `.close` closes the currently open file
 * `.include "path/here"` takes the contents of another ASM patch you have written, and inserts it into this one (relative to the `asm_patches` directory)
 
