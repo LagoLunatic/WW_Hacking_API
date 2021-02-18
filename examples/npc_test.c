@@ -13,7 +13,87 @@
 static void * _ctors SECTION(".ctors");
 static void * _dtors SECTION(".dtors");
 
+
+/** CONSTANTS **/
+profile_method_class l_daNPCTest_Method = {
+  .parent = {
+    .mpCreate = &daNPCTest_Create,
+    .mpDelete = &daNPCTest_Delete,
+    .mpExecute = &daNPCTest_Execute,
+    .mpIsDelete = &daNPCTest_IsDelete,
+    .mpDraw = &daNPCTest_Draw,
+  },
+  .mpUnkFunc1 = 0,
+  .mpUnkFunc2 = 0,
+  .mpUnkFunc3 = 0,
+};
+
+const f_pc_profile__Profile_Actor g_profile_NPC_Test = {
+  .parent = {
+    .mLayerID = -3,
+    .mListID = 7, // Affects execution order of actors in a given frame. Lower numbers execute first.
+    .mListPrio = -3,
+    .mPName = 0xB5, // Actor ID
+    0,
+    0,
+    .mpMtd0 = &g_fpcLf_Method,
+    .mSize = sizeof(NPC_Test_class),
+    .mSizeOther = 0,
+    .mDefaultParameters = 0,
+    .mpMtd1 = &g_fopAc_Method,
+  },
+  
+  .mDrawPriority = 0x9F,
+  0,
+  0,
+  .mpMtd2 = &l_daNPCTest_Method,
+  .mStatus = 0,
+  .mActorType = fopAc_ac_c__Type__Some_NPCs,
+  .mCullType = 0,
+  0,
+  0,
+};
+
+const fopNpc_npc_c__vtbl daNpc_Test_c_vtbl = {
+  0,
+  0,
+  .next_msgStatus = (pointer)&daNPCTest__next_msgStatus,
+  .getMsg = (pointer)&daNPCTest__getMsg,
+  .anmAtr = (pointer)&daNPCTest__anmAtr,
+};
+
+void (*daNPCTest__Actions[])(NPC_Test_class* this) = {
+  &daNPCTest__wait_action,
+};
+
+#define daNPCTest__Num_Cuts 1
+const char* daNPCTest__Cut_Names[daNPCTest__Num_Cuts] = {
+  "DUMMY_CUT",
+};
+
+const struct JntCtrl_Params daNPCTest__JntCtrl_Params = {
+  .mMaxHeadRot =  0x2000,
+  .mMinHeadRot = -0x2000,
+  .mMaxSpineRot =  0x1800,
+  .mMinSpineRot = -0x1800,
+  
+  .unk_0x00 =  0x2000,
+  .unk_0x04 = -0x1000,
+  .unk_0x08 =  0x0000,
+  .unk_0x0C =  0x0000,
+  
+  .unk_0x10 =  0x0708,
+  
+  .mDesiredFollowRotVel =  0x0800,
+  
+  .mAttArrowYOffset =  150.0f,
+  
+  .headOnlyFollow = true,
+};
+
+
 /** REL LINK FUNCTIONS **/
+/** Called to link and unlink the REL. Don't change these! **/
 void _prolog() {
   DynamicLink__ModuleConstructorsX(&_ctors);
   DynamicLink__ModuleProlog();
