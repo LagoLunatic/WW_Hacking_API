@@ -283,8 +283,11 @@ for line in input_str.splitlines():
     current_enum_name = None
     current_enum_data_size = None
   if current_struct_name is not None and line == "};":
+    full_current_struct_name = "struct " + current_struct_name
+    if full_current_struct_name in DATA_TYPE_TO_BYTE_SIZE and DATA_TYPE_TO_BYTE_SIZE[full_current_struct_name] != offset_in_current_struct:
+      raise Exception("Size of struct %s is inconsistent!" % current_struct_name)
     if offset_in_current_struct is not None and offset_in_current_struct != 0:
-      DATA_TYPE_TO_BYTE_SIZE["struct " + current_struct_name] = offset_in_current_struct
+      DATA_TYPE_TO_BYTE_SIZE[full_current_struct_name] = offset_in_current_struct
     current_struct_name = None
     offset_in_current_struct = None
 
@@ -303,6 +306,7 @@ func_datas = []
 func_name_to_namespaces = OrderedDict()
 for line in input_str.splitlines()[1:]:
   line = line[1:-1] # Remove first and last quotation mark since split won't get these
+  line = line.replace("\\,", ",") # Unescape commas
   func_name, address, func_signature, func_size, namespace = line.split("\",\"")
   address = int(address, 16)
   func_size = int(func_size, 16)
@@ -420,6 +424,7 @@ with open("./ghidra_exports/ww_variables_from_ghidra.csv") as f:
 var_datas = []
 for line in input_str.splitlines()[1:]:
   line = line[1:-1] # Remove first and last quotation mark since split won't get these
+  line = line.replace("\\,", ",") # Unescape commas
   var_name, address, data_type, data_size, namespace = line.split("\",\"")
   address = int(address, 16)
   data_size = int(data_size, 16)

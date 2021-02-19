@@ -135,7 +135,7 @@ int daNPCTest_Create(NPC_Test_class* this) {
   }
   
   // Connect our transform matrix to our model's transform matrix
-  this->parent.parent.mpMtx = &this->parent.mpMcaMorf->mpModel->mBaseMtx;
+  this->parent.parent.mpCullMtx = &this->parent.mpMcaMorf->mpModel->mBaseMtx;
   
   // Since we're an actor that can follow a path, try to create the stuff for that.
   if (daNPCTest__InitPath(this) == cPhs_ERROR_e) {
@@ -283,7 +283,7 @@ int daNPCTest_createSolidHeap_CB(NPC_Test_class* this) {
   }
   
   // Store a reference to ourselves in the model instance so that it knows who it belongs to.
-  this->parent.mpMcaMorf->mpModel->mpUserData = (pointer)this;
+  this->parent.mpMcaMorf->mpModel->mpUserData = (void *)this;
   
   daNPCTest__InitJntCtrl(this, modelData);
   
@@ -315,7 +315,7 @@ void daNPCTest__InitCollision(NPC_Test_class* this) {
   this->parent.mObjAcch.parent.mChk.vtbl = &dBgS_ObjAcch____vt.mChk_vtbl;
   this->parent.mObjAcch.parent.mDChk.mPolyPassChk.parent.vtbl = &dBgS_ObjAcch____vt.mDChk_vtbl.mPolyPassChk_vtbl;
   this->parent.mObjAcch.parent.mDChk.mGrpPassChk.parent.vtbl = &dBgS_ObjAcch____vt.mDChk_vtbl.mGrpPassChk_vtbl;
-  this->parent.mObjAcch.parent.mDChk.mPolyPassChk.parent.mPass0 = 1;
+  this->parent.mObjAcch.parent.mDChk.mPolyPassChk.parent.mbObjThrough = 1;
   dBgS_AcchCir__dBgS_AcchCir(&this->parent.mAcchCir);
   
   // Initialize the actor's Cc collision (so it prevents other actors from walking into it).

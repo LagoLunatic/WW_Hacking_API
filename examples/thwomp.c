@@ -53,8 +53,8 @@ int createSolidHeap_CB(THWOMP_class* this) {
   if (error != 0) {
     return cPhs_ERROR_e;
   }
-  this->mpCollision->mpTransPosCb = (pointer)&dBgS_MoveBGProc_Typical;
-  this->mpCollision->mpPushPullCb = (pointer)&THWOMP_test_pushpull;
+  this->mpCollision->mpTransPosCb = (void *)&dBgS_MoveBGProc_Typical;
+  this->mpCollision->mpPushPullCb = (void *)&THWOMP_test_pushpull;
   
   // Create the collision checker.
   //dBgS_Acch___ct(&this->mCollisionChecker);
@@ -85,7 +85,7 @@ int daThwomp_Create(THWOMP_class* this) {
   this->isChasing = false;
   
   // Log the entity's position to the console.
-  OSReport("mPos:  (%f, %f, %f)", this->parent.mOld.mPos.x,  this->parent.mOld.mPos.y,  this->parent.mOld.mPos.z);
+  OSReport("mPos:  (%f, %f, %f)", this->parent.mOrig.mPos.x, this->parent.mOrig.mPos.y, this->parent.mOrig.mPos.z);
   OSReport("mPos2: (%f, %f, %f)", this->parent.mNext.mPos.x, this->parent.mNext.mPos.y, this->parent.mNext.mPos.z);
   OSReport("mPos3: (%f, %f, %f)", this->parent.mCurrent.mPos.x, this->parent.mCurrent.mPos.y, this->parent.mCurrent.mPos.z);
   OSReport("mPos4: (%f, %f, %f)", this->parent.mEyePos.x, this->parent.mEyePos.y, this->parent.mEyePos.z);
@@ -143,7 +143,7 @@ int daThwomp_Execute(THWOMP_class* this) {
   float xDiff = fabs(this->parent.mCurrent.mPos.x - dest_pos->x);
   float yDiff = fabs(this->parent.mCurrent.mPos.y - dest_pos->y);
   float zDiff = fabs(this->parent.mCurrent.mPos.z - dest_pos->z);
-  short yRotDiff = fopAcM_searchActorAngleY(&this->parent, g_dComIfG_gameInfo.mPlay.mpCurPlayerActor);
+  short yRotDiff = fopAcM_searchActorAngleY(&this->parent, &g_dComIfG_gameInfo.mPlay.mpCurPlayerActor->parent);
   
   OSReport("xDiff: %f", xDiff);
   OSReport("yDiff: %f", yDiff);

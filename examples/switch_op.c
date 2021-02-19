@@ -26,8 +26,8 @@ int daSwOp_Create(SwitchOperator_class* this) {
   this->mSwitchToSet         = (this->parent.parent.parent.mParameters & 0x0000FF00) >> 8;
   this->mFirstSwitchToCheck  = (this->parent.parent.parent.mParameters & 0x00FF0000) >> 0x10;
   this->mNumSwitchesToCheck  = (this->parent.parent.parent.mParameters & 0xFF000000) >> 0x18;
-  this->mEVNTIndexToStart    = (this->parent.mOld.mRot.x & 0x00FF);
-  this->mTotalFramesToWait   = (this->parent.mOld.mRot.z & 0xFFFF);
+  this->mEVNTIndexToStart    = (this->parent.mOrig.mRot.x & 0x00FF);
+  this->mTotalFramesToWait   = (this->parent.mOrig.mRot.z & 0xFFFF);
   
   this->mEventIndexToStart = dEvent_manager_c__getEventIdx(&g_dComIfG_gameInfo.mPlay.mEventMgr, 0, this->mEVNTIndexToStart);
   
