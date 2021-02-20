@@ -249,6 +249,9 @@ void daNPCTest__daNPCTest(NPC_Test_class* this) {
   this->parent.parent.mAttentionDistances[3] = 0xA9;
   this->parent.parent.mInteractFlags = fopAc_ac_c__InteractFlags__Targetable_B | fopAc_ac_c__InteractFlags__Talkable;
   
+  this->parent.parent.mEvtInfo.mpCheckCB = daNPCTest__XyCheckCB;
+  this->mXyItemId = 0xFF;
+  
   daNPCTest__InitCollision(this);
   
   this->parent.mCurrMsgBsPcId = -1;
@@ -507,6 +510,12 @@ ulong daNPCTest__getMsg(NPC_Test_class* this) {
     return 6220;
   }
   
+  // In the event that the player started this conversation with the X/Y/Z buttons, this value will give us the item that was presented.
+  // For testing purposes we'll check if the player presented a Knight's Crest to the NPC.
+  if (g_dComIfG_gameInfo.mPlay.mEvtCtrl.mItemNo == dItem_data__ItemNo__KnightsCrest) {
+    return 6224;
+  }
+  
   return 6227;
 }
 
@@ -537,10 +546,14 @@ int daNPCTest__next_msgStatus(NPC_Test_class* this, ulong* msgIDPtr) {
   }
 }
 
+bool daNPCTest__XyCheckCB(NPC_Test_class* this, int itemSlotIndex) {
+  this->mXyItemId = g_dComIfG_gameInfo.mPlay.mEvtCtrl.mItemNo;
+  return 1;
+}
 
 /** EVENT FUNCTIONS **/
 void daNPCTest__eventOrder(NPC_Test_class* this) {
-  this->parent.parent.mEvtInfo.mBehaviorFlag |= dEvt__ActorBehaviorFlag__CanTalk;
+  this->parent.parent.mEvtInfo.mBehaviorFlag |= dEvt__ActorBehaviorFlag__CanTalk | dEvt__ActorBehaviorFlag__CanTalkItem;
 }
 
 void daNPCTest__checkOrder(NPC_Test_class* this) {

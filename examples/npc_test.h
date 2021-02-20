@@ -12,6 +12,8 @@ typedef struct NPC_Test_class {
   short mMaxFollowRotVel;
   s8 mHeadJntIdx;
   s8 mSpineJntIdx;
+  
+  s8 mXyItemId;
 } NPC_Test_class;
 
 struct JntCtrl_Params {
@@ -67,6 +69,10 @@ void daNPCTest__lookBack(NPC_Test_class* this);
 /** In NPCs that can speak, these handle the flow of the conversation. **/
 ulong daNPCTest__getMsg(NPC_Test_class* this);
 int daNPCTest__next_msgStatus(NPC_Test_class* this, ulong* msgIDPtr);
+
+/** This allows NPCs to check certain conditions to decide if they will accept being talked to with items on the X/Y/Z buttons. Returns true if they will, false if they won't.
+The itemSlotIndex passed in is the index of the EquippedItem that the player used to initiate the conversation. **/
+bool daNPCTest__XyCheckCB(NPC_Test_class* this, int itemSlotIndex);
 
 /** EVENT FUNCTIONS **/
 /** These handle how the actor participates in the game's event system, like being talked to or having event actions executed. **/
