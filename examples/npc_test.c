@@ -502,17 +502,39 @@ void daNPCTest__lookBack(NPC_Test_class* this) {
 
 /** MESSAGE FUNCTIONS **/
 ulong daNPCTest__getMsg(NPC_Test_class* this) {
-  //OSReport("getMsg called");
-  
+  // This checks if the current time corresponds to daytime or nighttime. If it returns true, it's nighttime. False means it's daytime.
   if(dKy_daynight_check()) {
-    return 0;
+    return 6220;
   }
   
   return 6227;
 }
 
 int daNPCTest__next_msgStatus(NPC_Test_class* this, ulong* msgIDPtr) {
-  return fopNpc_npc_c__MessageStatus__Finished;
+  // We're going to decide what message to show next (or to stop speaking) based on the current message ID, given to us in msgIDPtr.
+  switch (*msgIDPtr) {
+    case 6220:
+      // We cue up the next message by writing its ID to the location at msgIDPtr.
+      *msgIDPtr = 6221;
+      
+      // Returning __Continued tells the game that the NPC will continue to speak.
+      return fopNpc_npc_c__MessageStatus__Continued;
+    case 6221:
+      // mSelectedChoiceIndex records the index of the choice that the player made from the previous message's list of options.
+      // Choices are created by the control tags [two_choices] and [three_choices].
+      if (this->parent.mpCurrMsg->mSelectedChoiceIndex == 0)
+        *msgIDPtr = 6222;
+      else
+        *msgIDPtr = 6223;
+      return fopNpc_npc_c__MessageStatus__Continued;
+    case 6223:
+      *msgIDPtr = 6222;
+      return fopNpc_npc_c__MessageStatus__Continued;
+    case 6222:
+    default:
+      // Returning __Finished tells the game that there are no more messages.
+      return fopNpc_npc_c__MessageStatus__Finished;
+  }
 }
 
 
