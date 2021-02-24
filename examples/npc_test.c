@@ -249,8 +249,8 @@ void daNPCTest__daNPCTest(NPC_Test_class* this) {
   this->parent.parent.mAttentionDistances[3] = 0xA9;
   this->parent.parent.mInteractFlags = fopAc_ac_c__InteractFlags__Targetable_B | fopAc_ac_c__InteractFlags__Talkable;
   
-  this->parent.parent.mEvtInfo.mpCheckCB = daNPCTest__XyCheckCB;
-  this->mXyItemId = 0xFF;
+  this->parent.parent.mEvtInfo.mpCheckCB = daNPCTest__XyzCheckCB;
+  this->mXyzItemId = 0xFF;
   
   daNPCTest__InitCollision(this);
   
@@ -360,9 +360,8 @@ int daNPCTest__InitPath(NPC_Test_class* this) {
 
 /** EXECUTION STATE FUNCTIONS **/
 void daNPCTest__wait_action(NPC_Test_class* this) {
-  //OSReport("Wait action called");
-  
-  daNPCTest__talk(this);
+  if (daNPCTest__ChkTalk(this))
+    daNPCTest__talk(this);
   
   daNPCTest__lookBack(this);
 }
@@ -546,9 +545,32 @@ int daNPCTest__next_msgStatus(NPC_Test_class* this, ulong* msgIDPtr) {
   }
 }
 
-bool daNPCTest__XyCheckCB(NPC_Test_class* this, int itemSlotIndex) {
-  this->mXyItemId = g_dComIfG_gameInfo.mPlay.mEvtCtrl.mItemNo;
+bool daNPCTest__XyzCheckCB(NPC_Test_class* this, int itemSlotIndex) {
   return 1;
+}
+
+bool daNPCTest__ChkTalk(NPC_Test_class* this) {
+  bool bCanContinueTalking = 0;
+  
+  // Check if the NPC has been talked to using the XYZ buttons instead of the A button.
+  bool bIsXyzTalkButton = g_dComIfG_gameInfo.mPlay.mEvtCtrl.mTalkButton == 1 || g_dComIfG_gameInfo.mPlay.mEvtCtrl.mTalkButton == 2 || g_dComIfG_gameInfo.mPlay.mEvtCtrl.mTalkButton == 3;
+  
+  // Talked to with XYZ buttons!
+  if (bIsXyzTalkButton) {
+    bool bIsPresentCutsceneDone = dEvent_manager_c__ChkPresentEnd(&g_dComIfG_gameInfo.mPlay.mEventMgr); // This checks whether the cutscene started by Link presenting an item to an NPC has ended.
+    
+    if (bIsPresentCutsceneDone) {
+      this->mXyzItemId = g_dComIfG_gameInfo.mPlay.mEvtCtrl.mItemNo; // Store the item the player used to talk to us to our local variable.
+      bCanContinueTalking = 1;
+    }
+  }
+  // Talked to with A button...
+  else {
+    this->mXyzItemId = dItem_data__ItemNo__InvalidItem; // Ensure that our local item ID is null as long as we're not being talked to with the XYZ buttons.
+    bCanContinueTalking = 1;
+  }
+  
+  return bCanContinueTalking;
 }
 
 /** EVENT FUNCTIONS **/
