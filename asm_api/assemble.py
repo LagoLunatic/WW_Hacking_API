@@ -140,6 +140,10 @@ def try_apply_local_relocation(bin_name, elf_relocation, elf_symbol):
   return False
 
 try:
+  # First delete any old patch diffs.
+  for diff_path in glob.glob('./asm_patches/patch_diffs/*_diff.txt'):
+    os.remove(diff_path)
+  
   with open("./vanilla_defines/ww_linker.ld") as f:
     linker_script = f.read()
   
