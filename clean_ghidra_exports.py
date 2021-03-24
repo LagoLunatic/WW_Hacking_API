@@ -74,9 +74,48 @@ DATA_TYPE_TO_BYTE_SIZE = {
   "size_t": 4,
 }
 
-DATA_TYPES_TO_IGNORE_ALIGNMENT = [
-  "struct _GXColor",
-]
+DATA_TYPE_TO_NEEDED_ALIGNMENT = {
+  "u8": 1,
+  "u16": 2,
+  "u32": 4,
+  "s8": 1,
+  "s16": 2,
+  "s32": 4,
+  "char": 1,
+  "short": 2,
+  "int": 4,
+  "long": 4,
+  "unsigned char": 1,
+  "unsigned short": 2,
+  "unsigned int": 4,
+  "unsigned long": 4,
+  "pointer": 4,
+  "float": 4,
+  "double": 8,
+  
+  "struct cXyz": 4,
+  "struct csXyz": 2,
+  
+  "GXTexObj": 4,
+  "GXTlutObj": 4,
+  "struct _GXTexObj": 4,
+  "GXTexWrapMode": 1,
+  "GXTexFilter": 1,
+  "GXTexFmt": 1,
+  "GXSpotFn": 4,
+  "GXTlutFmt": 1,
+  "enum _GXDistAttnFn": 4,
+  "TELight": 4,
+  "struct TObject": 4,
+  "J3DAlphaComp": 4,
+  "J3DGXColor": 4,
+  "J3DTevOrder": 4,
+  "OSMessage": 4,
+  "EMountDirection": 4,
+  "__off_t": 4,
+  "__off64_t": 4, # Not sure why this isn't 8
+  "size_t": 4,
+}
 
 def clean_symbol_name(symbol_name):
   symbol_name = symbol_name.replace("new[]", "new_array")
@@ -137,6 +176,7 @@ for line in input_str.splitlines():
     if base_type_name in DATA_TYPE_TO_BYTE_SIZE:
       #print("%s = %s = 0x%02X" % (new_type_name, base_type_name, DATA_TYPE_TO_BYTE_SIZE[base_type_name]))
       DATA_TYPE_TO_BYTE_SIZE[new_type_name] = DATA_TYPE_TO_BYTE_SIZE[base_type_name]
+      DATA_TYPE_TO_NEEDED_ALIGNMENT[new_type_name] = DATA_TYPE_TO_NEEDED_ALIGNMENT[base_type_name]
   
   if line == "typedef struct TVec3<float> TVec3<float>, *PTVec3<float>;":
     line = "//" + line
@@ -174,6 +214,7 @@ for line in input_str.splitlines():
   struct_def_match = re.search(r"^struct (\S+) {", line)
   if struct_def_match:
     current_struct_name = struct_def_match.group(1)
+    full_current_struct_name = "struct " + current_struct_name
   
   if current_enum_name is not None:
     enum_value_match = re.search(r"^    ([^=]+)=([^,]+)(,?)$", line)
@@ -241,11 +282,11 @@ for line in input_str.splitlines():
       
       if data_type in DATA_TYPE_TO_BYTE_SIZE:
         data_type_size = DATA_TYPE_TO_BYTE_SIZE[data_type]
-        if data_type not in DATA_TYPES_TO_IGNORE_ALIGNMENT:
-          if data_type_size == 2 and (offset_in_current_struct % 2) != 0:
-            print("Offset is not halfword aligned at offset 0x%02X in struct %s" % (offset_in_current_struct, current_struct_name))
-          if data_type_size == 4 and (offset_in_current_struct % 4) != 0:
-            print("Offset is not word aligned at offset 0x%02X in struct %s" % (offset_in_current_struct, current_struct_name))
+        if offset_in_current_struct % DATA_TYPE_TO_NEEDED_ALIGNMENT[data_type] != 0:
+          print("Offset is not properly aligned at offset 0x%02X in struct %s" % (offset_in_current_struct, current_struct_name))
+        
+        if offset_in_current_struct == 0:
+          DATA_TYPE_TO_NEEDED_ALIGNMENT[full_current_struct_name] = DATA_TYPE_TO_NEEDED_ALIGNMENT[data_type]
         
         data_type_size *= field_array_multiplier
         if data_type_size == 0:
@@ -280,10 +321,10 @@ for line in input_str.splitlines():
   if current_enum_name is not None and line == "} %s;" % current_enum_name:
     if current_enum_data_size is not None and current_enum_data_size != 0:
       DATA_TYPE_TO_BYTE_SIZE["enum " + current_enum_name] = current_enum_data_size
+      DATA_TYPE_TO_NEEDED_ALIGNMENT["enum " + current_enum_name] = current_enum_data_size
     current_enum_name = None
     current_enum_data_size = None
   if current_struct_name is not None and line == "};":
-    full_current_struct_name = "struct " + current_struct_name
     if full_current_struct_name in DATA_TYPE_TO_BYTE_SIZE and DATA_TYPE_TO_BYTE_SIZE[full_current_struct_name] != offset_in_current_struct:
       raise Exception("Size of struct %s is inconsistent!" % current_struct_name)
     if offset_in_current_struct is not None and offset_in_current_struct != 0:
