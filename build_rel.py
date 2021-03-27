@@ -4,6 +4,7 @@ from subprocess import call
 import sys
 import elf2rel
 import argparse
+import hashlib
 
 
 parser = argparse.ArgumentParser(description="Compile an actor written in C to a GameCube REL file.")
@@ -27,12 +28,18 @@ parser.add_argument(
   type=str,
   help="path to the RELS.arc to insert the REL into",
 )
+parser.add_argument(
+  "--md5_check",
+  type=str,
+  help="the MD5 hash to ensure the REL matches once built (for testing; use after updating Ghidra exports)",
+)
 args = parser.parse_args()
 
 c_src_path = args.c_src_path
 rel_id = int(args.module_id, 16)
 actor_profile_name = args.profile
 rels_arc_path = args.rels_arc
+md5_check = args.md5_check
 
 
 if sys.platform == "win32":
@@ -130,4 +137,14 @@ with open(disassembled_rel_path, "w") as f:
   result = call(command, stdout=f)
 if result != 0:
   raise Exception("Objdump call failed")
+
+
+md5 = hashlib.md5()
+with open(out_rel_path, "rb") as f:
+  md5.update(f.read())
+print("MD5 hash of the built REL file: %s" % md5.hexdigest())
+if md5.hexdigest() == md5_check:
+  print("MD5 hash matched.")
+else:
+  raise Exception("MD5 hash did not match! Expected: %s" % md5_check)
 
