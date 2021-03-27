@@ -1,7 +1,6 @@
 
-.open "sys/main.dol"
-.org @NextFreeSpace
+; Put your custom ASM code for your hack into this file.
 
-; Put your custom code here. It will be added into main.dol, making it accessible to everything in the game.
-
-.close
+; You can also .include other ASM files into this one. For example:
+;.include "includes/skip_intro.asm"
+;.include "includes/bgm_file.asm"

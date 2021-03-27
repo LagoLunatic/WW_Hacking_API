@@ -1,3 +1,0 @@
-sys/main.dol:
-  0x803FCFA8:
-    Data: []
