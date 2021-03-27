@@ -3,20 +3,36 @@ import os
 from subprocess import call
 import sys
 import elf2rel
+import argparse
 
 
-if len(sys.argv) < 4 or len(sys.argv) > 5:
-  print("Invalid arguments. Format should be as follows:")
-  print("  py build_rel.py [path to C source file] [REL module ID number in hexadecimal] [actor profile symbol name] [optional: path to RELS.arc to insert the REL into]")
-  sys.exit(1)
+parser = argparse.ArgumentParser(description="Compile an actor written in C to a GameCube REL file.")
+parser.add_argument(
+  "c_src_path",
+  type=str,
+  help="path to the C source file",
+)
+parser.add_argument(
+  "module_id",
+  type=str,
+  help="the REL module ID in hexadecimal",
+)
+parser.add_argument(
+  "profile",
+  type=str,
+  help="the symbol name of the actor's profile",
+)
+parser.add_argument(
+  "--rels_arc",
+  type=str,
+  help="path to the RELS.arc to insert the REL into",
+)
+args = parser.parse_args()
 
-c_src_path = sys.argv[1]
-rel_id = int(sys.argv[2], 16)
-actor_profile_name = sys.argv[3]
-if len(sys.argv) == 5:
-  rels_arc_path = sys.argv[4]
-else:
-  rels_arc_path = None
+c_src_path = args.c_src_path
+rel_id = int(args.module_id, 16)
+actor_profile_name = args.profile
+rels_arc_path = args.rels_arc
 
 
 if sys.platform == "win32":
