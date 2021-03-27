@@ -2,9 +2,11 @@
 import os
 import yaml
 import sys
+import re
 
 sys.path.insert(0, "./wwrando")
 
+from fs_helpers import *
 from wwlib.rarc import RARC
 from wwlib.dol import DOL
 from wwlib.rel import REL, RELRelocation, RELRelocationType
@@ -118,11 +120,11 @@ class GameCubeFilesystem:
       map_text = read_all_bytes(data).decode("ascii")
       
       if map_path == "files/maps/framework.map":
-        addr_to_name_map = disassemble.get_main_symbols(map_text)
+        addr_to_name_map = self.get_main_symbols(map_text)
       else:
         rel_name = os.path.splitext(os.path.basename(map_path))[0]
         rel = self.get_rel("files/rels/%s.rel" % rel_name)
-        addr_to_name_map = disassemble.get_rel_symbols(rel, map_text)
+        addr_to_name_map = self.get_rel_symbols(rel, map_text)
       
       symbol_map = {}
       for address, name in addr_to_name_map.items():
@@ -130,6 +132,65 @@ class GameCubeFilesystem:
       
       self.symbol_maps_by_path[map_path] = symbol_map
       return symbol_map
+  
+  def get_main_symbols(self, framework_map_contents):
+    main_symbols = {}
+    matches = re.findall(r"^  [0-9a-f]{8} [0-9a-f]{6} ([0-9a-f]{8})(?: +\d+)? (.+?)(?: \(entry of [^)]+\))? \t", framework_map_contents, re.IGNORECASE | re.MULTILINE)
+    for match in matches:
+      address, name = match
+      address = int(address, 16)
+      main_symbols[address] = name
+    return main_symbols
+  
+  def get_rel_symbols(self, rel, rel_map_data):
+    rel_map_lines = rel_map_data.splitlines()
+    found_memory_map = False
+    next_section_index = 0
+    section_name_to_section_index = {}
+    for line in rel_map_lines:
+      if line.strip() == "Memory map:":
+        found_memory_map = True
+      if found_memory_map:
+        section_match = re.search(r"^ +\.(text|ctors|dtors|rodata|data|bss)  [0-9a-f]{8} ([0-9a-f]{8}) [0-9a-f]{8}$", line)
+        if section_match:
+          section_name = section_match.group(1)
+          section_size = int(section_match.group(2), 16)
+          if section_size > 0:
+            section_name_to_section_index[section_name] = next_section_index
+            next_section_index += 1
+    if not found_memory_map:
+      raise Exception("Failed to find memory map")
+    
+    rel_symbol_names = {}
+    all_valid_sections = []
+    for section in rel.sections:
+      if section.length != 0:
+        all_valid_sections.append(section)
+    current_section_name = None
+    current_section_index = None
+    current_section = None
+    for line in rel_map_lines:
+      section_header_match = re.search(r"^\.(text|ctors|dtors|rodata|data|bss) section layout$", line)
+      if section_header_match:
+        current_section_name = section_header_match.group(1)
+        if current_section_name in section_name_to_section_index:
+          current_section_index = section_name_to_section_index[current_section_name]
+          current_section = all_valid_sections[current_section_index]
+        else:
+          current_section_index = None
+          current_section = None
+      symbol_entry_match = re.search(r"^  [0-9a-f]{8} [0-9a-f]{6} ([0-9a-f]{8})(?: +\d+)? (.+?)(?: \(entry of [^)]+\))? \t", line, re.IGNORECASE)
+      if current_section is not None and symbol_entry_match:
+        current_section_offset = current_section.offset
+        if current_section_offset == 0:
+          raise Exception("Found symbol in section with offset 0")
+        symbol_offset = symbol_entry_match.group(1)
+        symbol_offset = int(symbol_offset, 16)
+        symbol_offset += current_section_offset
+        symbol_name = symbol_entry_match.group(2)
+        rel_symbol_names[symbol_offset] = symbol_name
+    
+    return rel_symbol_names
   
   def replace_arc(self, arc_path, new_data):
     if arc_path not in self.gcm.files_by_path:
