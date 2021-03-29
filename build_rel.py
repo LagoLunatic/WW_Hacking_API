@@ -43,7 +43,7 @@ md5_check = args.md5_check
 
 
 if sys.platform == "win32":
-  DEVKIT_BIN_PATH = r"C:\devkitPro\devkitPPC\bin"
+  DEVKIT_BIN_PATH = r"D:\devkitPro\devkitPPC\bin"
 else:
   if not "DEVKITPPC" in os.environ:
     raise Exception(r"Could not find devkitPPC. Path to devkitPPC should be in the DEVKITPPC env var")
@@ -67,12 +67,14 @@ if not os.path.isdir(build_dir):
   os.makedirs(build_dir)
 
 
-elf_path = os.path.join(build_dir, basename_no_ext + ".o")
+elf_path = os.path.join(build_dir, basename_no_ext + ".bc")
 command = [
-  get_bin("powerpc-eabi-gcc"),
-  "-mcpu=750",
-  "-fno-inline",
-  "-Wall",
+  "E:\\Github\\llvm-project\\build\\Debug\\bin\\clang++.exe",
+  "--target=powerpc-gekko-ibm-kuribo-eabi",
+  "-fno-rtti",
+  "-fno-exceptions",
+  "-fno-unwind-tables",
+  "-fdeclspec",
   "-Og",
   "-g",
   "-fshort-enums",
@@ -86,7 +88,7 @@ if result != 0:
   raise Exception("Compiler call failed")
 
 
-linked_elf_path = os.path.join(build_dir, basename_no_ext + "_linked.o")
+linked_elf_path = os.path.join(build_dir, basename_no_ext + "_linked.bc")
 command = [
   get_bin("powerpc-eabi-ld"),
   "--relocatable",
@@ -99,6 +101,20 @@ print()
 result = call(command)
 if result != 0:
   raise Exception("Linker call failed")
+  
+
+gcc_linked_elf_path = os.path.join(build_dir, basename_no_ext + "_linked.o")
+command = [
+  "E:\\Github\\llvm-project\\build\\Debug\\bin\\ld.lld.exe",
+  linked_elf_path,
+  "-o", gcc_linked_elf_path,
+  "--relocatable",
+]
+print(" ".join(command))
+print()
+result = call(command)
+if result != 0:
+  raise Exception("GCC conversion call failed")
 
 
 disassembled_elf_path = os.path.join(build_dir, basename_no_ext + "_disassembled_elf.asm")
@@ -107,7 +123,7 @@ command = [
   "-m", "powerpc",
   "-D",
   "-EB",
-  linked_elf_path,
+  gcc_linked_elf_path,
 ]
 print(" ".join(command))
 print()
@@ -118,25 +134,25 @@ if result != 0:
 
 
 out_rel_path = os.path.join(build_dir, "d_a_%s.rel" % basename_no_ext)
-elf2rel.convert_elf_to_rel(linked_elf_path, out_rel_path, rel_id, actor_profile_name, rels_arc_path)
+elf2rel.convert_elf_to_rel(gcc_linked_elf_path, out_rel_path, rel_id, actor_profile_name, rels_arc_path)
 
 
-disassembled_rel_path = os.path.join(build_dir, basename_no_ext + "_disassembled_rel.asm")
-command = [
-  get_bin("powerpc-eabi-objdump"),
-  "-m", "powerpc",
-  "-D",
-  "-EB",
-  "--disassemble-zeroes",
-  "-b", "binary",
-  out_rel_path,
-]
-print(" ".join(command))
-print()
-with open(disassembled_rel_path, "w") as f:
-  result = call(command, stdout=f)
-if result != 0:
-  raise Exception("Objdump call failed")
+#disassembled_rel_path = os.path.join(build_dir, basename_no_ext + "_disassembled_rel.asm")
+#command = [
+#  get_bin("powerpc-eabi-objdump"),
+#  "-m", "powerpc",
+#  "-D",
+#  "-EB",
+#  "--disassemble-zeroes",
+#  "-b", "binary",
+#  out_rel_path,
+#]
+#print(" ".join(command))
+#print()
+#with open(disassembled_rel_path, "w") as f:
+#  result = call(command, stdout=f)
+#if result != 0:
+#  raise Exception("Objdump call failed")
 
 
 md5 = hashlib.md5()

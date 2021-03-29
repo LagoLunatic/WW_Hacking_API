@@ -33,7 +33,7 @@ def convert_elf_to_rel(in_elf_path, out_rel_path, rel_id, actor_profile_name, re
   section_name_to_rel_section = {}
   elf_section_index_to_rel_section = {}
   for elf_section_index, elf_section in enumerate(elf.sections):
-    if elf_section.name in ALLOWED_SECTIONS or elf_section.type == ELFSectionType.SHT_NULL:
+    if elf_section.name in ALLOWED_SECTIONS or elf_section.type == ELFSectionType.SHT_NULL or elf_section.name.startswith(".text"):
       # Sections we will add to the REL.
       rel_section = RELSection()
       rel_section.data = make_copy_data(elf_section.data)
@@ -104,19 +104,19 @@ def convert_elf_to_rel(in_elf_path, out_rel_path, rel_id, actor_profile_name, re
           rel.relocation_entries_for_module[module_num] = []
         rel.relocation_entries_for_module[module_num].append(rel_relocation)
   
-  symbol = elf.symbols_by_name[".symtab"]["_prolog"]
+  symbol = elf.symbols_by_name[".symtab"]["_prolog__Fv"]
   rel_section = elf_section_index_to_rel_section[symbol.section_index]
   rel_section_index = rel.sections.index(rel_section)
   rel.prolog_section = rel_section_index
   rel.prolog_offset = symbol.address
   
-  symbol = elf.symbols_by_name[".symtab"]["_epilog"]
+  symbol = elf.symbols_by_name[".symtab"]["_epilog__Fv"]
   rel_section = elf_section_index_to_rel_section[symbol.section_index]
   rel_section_index = rel.sections.index(rel_section)
   rel.epilog_section = rel_section_index
   rel.epilog_offset = symbol.address
   
-  symbol = elf.symbols_by_name[".symtab"]["_unresolved"]
+  symbol = elf.symbols_by_name[".symtab"]["_unresolved__Fv"]
   rel_section = elf_section_index_to_rel_section[symbol.section_index]
   rel_section_index = rel.sections.index(rel_section)
   rel.unresolved_section = rel_section_index
@@ -148,7 +148,7 @@ def convert_elf_to_rel(in_elf_path, out_rel_path, rel_id, actor_profile_name, re
     profile_symbol = elf.symbols_by_name[".symtab"][actor_profile_name]
     profile_list.relocation_entries_for_module[rel.id][0].symbol_address = profile_symbol.address
     
-    section_with_profile = section_name_to_rel_section[".rodata"]
+    section_with_profile = section_name_to_rel_section[".data"]
     new_section_index_with_profile = rel.sections.index(section_with_profile)
     profile_list.relocation_entries_for_module[rel.id][0].section_num_to_relocate_against = new_section_index_with_profile
     
