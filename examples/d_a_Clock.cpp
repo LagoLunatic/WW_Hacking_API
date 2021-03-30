@@ -80,15 +80,15 @@ PhaseState daClock::_createUI() {
   shadowTextBox->mpFont->mMonospaceFlag = true;
   shadowTextBox->mpFont->mMonospaceWidth = 15;
   
-  mpClockDlst.mpClockUI = clockScreen;
-  mpClockDlst.mpTimeText = mainTextBox;
-  mpClockDlst.mpTimeTextShadow = shadowTextBox;
+  mClockDlst.mpClockUI = clockScreen;
+  mClockDlst.mpTimeText = mainTextBox;
+  mClockDlst.mpTimeTextShadow = shadowTextBox;
   
   return cPhs_COMPLEATE_e;
 }
 
 bool daClock::_delete() {
-  delete(mpClockDlst.mpClockUI);
+  delete(mClockDlst.mpClockUI);
   dComIfG_resDelete(&mPhaseRequest, RES_NAME);
   
   return true;
@@ -103,8 +103,8 @@ bool daClock::_execute() {
     curHour = 12;
   }
   
-  snprintf(mpClockDlst.mpTimeText->mpStringPtr, 6, "%02d:%02d", curHour, curMin);
-  snprintf(mpClockDlst.mpTimeTextShadow->mpStringPtr, 6, "%02d:%02d", curHour, curMin);
+  snprintf(mClockDlst.mpTimeText->mpStringPtr, 6, "%02d:%02d", curHour, curMin);
+  snprintf(mClockDlst.mpTimeTextShadow->mpStringPtr, 6, "%02d:%02d", curHour, curMin);
   
   return true;
 }
@@ -112,7 +112,7 @@ bool daClock::_execute() {
 bool daClock::_draw() {
   g_dComIfG_gameInfo.mDlstList.set(&g_dComIfG_gameInfo.mDlstList.mp2DOpa,
                                    &g_dComIfG_gameInfo.mDlstList.mp2DOpaEnd,
-                                   &mpClockDlst);
+                                   &mClockDlst);
 
   return true;
 }
