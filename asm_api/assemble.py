@@ -377,14 +377,15 @@ try:
         with open(map_name) as f:
           on_custom_symbols = False
           for line in f.read().splitlines():
-            if line.startswith(" .text          "):
+            if re.search(r"^ .\S+ +0x", line):
               on_custom_symbols = True
               continue
             
             if on_custom_symbols:
-              if not line:
-                break
-              match = re.search(r" +0x(?:00000000)?([0-9a-f]{8}) +(\S+)", line)
+              print(line)
+              match = re.search(r"^ +0x(?:00000000)?([0-9a-f]{8}) +(\S+)", line)
+              if not match:
+                continue
               symbol_address = int(match.group(1), 16)
               symbol_name = match.group(2)
               custom_symbols_for_file[symbol_name] = symbol_address
