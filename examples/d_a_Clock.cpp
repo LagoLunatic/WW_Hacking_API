@@ -62,7 +62,7 @@ PhaseState daClock::_createUI() {
   
   clockScreen->set(TIMER_BLO_NAME, mpTimerResArc);
   
-  J2DTextBox * mainTextBox = (J2DTextBox *)clockScreen->search(0x74696D57);
+  J2DTextBox * mainTextBox = (J2DTextBox *)clockScreen->search('timW');
   if (mainTextBox == 0) {
     OSReport("daClock: Failed to find main time textbox!");
     return cPhs_ERROR_e;
@@ -71,7 +71,7 @@ PhaseState daClock::_createUI() {
   mainTextBox->mpFont->mMonospaceFlag = true;
   mainTextBox->mpFont->mMonospaceWidth = 15;
   
-  J2DTextBox * shadowTextBox = (J2DTextBox *)clockScreen->search(0x74696D42);
+  J2DTextBox * shadowTextBox = (J2DTextBox *)clockScreen->search('timB');
   if (shadowTextBox == 0) {
     OSReport("daClock: Failed to find time shadow textbox!");
     return cPhs_ERROR_e;
