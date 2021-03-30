@@ -169,7 +169,7 @@ try:
     
     asm_with_includes = ""
     for line in asm.splitlines():
-      include_match = re.match(r"\.include\s+\"([^\"]+)\"$", line, re.IGNORECASE)
+      include_match = re.search(r"^\s*\.include\s+\"([^\"]+)\"$", line, re.IGNORECASE)
       if include_match:
         relative_file_path = include_match.group(1)
         file_path = os.path.join("./asm_patches", relative_file_path)
@@ -190,10 +190,10 @@ try:
       line = re.sub(r";.+$", "", line)
       line = line.strip()
       
-      open_file_match = re.match(r"\.open\s+\"([^\"]+)\"$", line, re.IGNORECASE)
-      org_match = re.match(r"\.org\s+0x([0-9a-f]+)$", line, re.IGNORECASE)
-      org_symbol_match = re.match(r"\.org\s+([\._a-z][\._a-z0-9]+|@NextFreeSpace)$", line, re.IGNORECASE)
-      branch_match = re.match(r"(?:b|beq|bne|blt|bgt|ble|bge)\s+0x([0-9a-f]+)(?:$|\s)", line, re.IGNORECASE)
+      open_file_match = re.search(r"^\s*\.open\s+\"([^\"]+)\"$", line, re.IGNORECASE)
+      org_match = re.search(r"^\s*\.org\s+0x([0-9a-f]+)$", line, re.IGNORECASE)
+      org_symbol_match = re.search(r"^\s*\.org\s+([\._a-z][\._a-z0-9]+|@NextFreeSpace)$", line, re.IGNORECASE)
+      branch_match = re.search(r"^\s*(?:b|beq|bne|blt|bgt|ble|bge)\s+0x([0-9a-f]+)(?:$|\s)", line, re.IGNORECASE)
       if open_file_match:
         relative_file_path = open_file_match.group(1)
         if most_recent_file_path or most_recent_org_offset is not None:
