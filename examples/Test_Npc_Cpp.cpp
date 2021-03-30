@@ -1,7 +1,73 @@
 #include "../vanilla_defines/ww_defines.h"
+#include "RelDefines.h"
 #include "Test_Npc_Cpp.h"
 
-/* *** Begin Required Constants *** */
+
+struct fopNpc_npc_c;
+struct fopAc_ac_c;
+enum PhaseState;
+
+
+/* *** Begin Struct Definitions *** */
+
+struct Test_Npc_Cpp : fopNpc_npc_c {
+    PhaseState _create();
+    bool _delete();
+    bool _execute();
+    bool _draw();
+};
+
+PhaseState Test_Npc_Cpp::_create() {
+  OSReport("Creating!\n");
+  return cPhs_COMPLEATE_e;
+}
+
+bool Test_Npc_Cpp::_delete() {
+  OSReport("Deleting!\n");
+  return true;
+}
+
+bool Test_Npc_Cpp::_execute() {
+  OSReport("Executing!\n");
+  return true;
+}
+
+bool Test_Npc_Cpp::_draw() {
+  OSReport("Drawing!\n");
+  return true;
+}
+
+/* *** End Struct Definitions *** */
+
+
+/* *** Begin Profile Definitions *** */
+
+// Interface functions for the game engine to call
+PhaseState Test_Npc_Cpp_Create(fopAc_ac_c *pActor) {
+  Test_Npc_Cpp * actorCast = (Test_Npc_Cpp *)pActor;
+  return actorCast->_create();
+}
+
+bool Test_Npc_Cpp_Delete(fopAc_ac_c *pActor) {
+  Test_Npc_Cpp * actorCast = (Test_Npc_Cpp *)pActor;
+  return actorCast->_delete();
+}
+
+bool Test_Npc_Cpp_Execute(fopAc_ac_c *pActor) {
+  Test_Npc_Cpp * actorCast = (Test_Npc_Cpp *)pActor;
+  return actorCast->_execute();
+}
+
+bool Test_Npc_Cpp_IsDelete(fopAc_ac_c *pActor) {
+  return true;
+}
+
+bool Test_Npc_Cpp_Draw(fopAc_ac_c *pActor) {
+  Test_Npc_Cpp * actorCast = (Test_Npc_Cpp *)pActor;
+  return actorCast->_draw();
+}
+
+// Function pointer table so the engine knows how to call the above functions
 profile_method_class l_daTestNPCCpp_Method {
   {
     &Test_Npc_Cpp_Create,
@@ -16,6 +82,7 @@ profile_method_class l_daTestNPCCpp_Method {
   0
 };
 
+// Information that the engine needs to know about the actor
 const f_pc_profile__Profile_Actor g_profile_Test_NPC_CPP = {
   {
     -3,
@@ -41,56 +108,5 @@ const f_pc_profile__Profile_Actor g_profile_Test_NPC_CPP = {
   0,
   0
 };
-/* *** End Required Constants *** */
 
-
-/* *** Begin REL Link Functions *** */
-#define SECTION(S) __attribute__((section(S)))
-typedef void (*VoidFuncPtr)(void);
-
-extern "C" {
-  void ModuleProlog();
-  void ModuleEpilog();
-  void ModuleUnresolved();
-}
-
-VoidFuncPtr _ctors[] SECTION(".ctors") { 0 };
-VoidFuncPtr _dtors[] SECTION(".dtors") { 0 };
-
-void _prolog() {
-  DynamicLink__ModuleConstructorsX((void **)(&_ctors));
-  DynamicLink__ModuleProlog();
-}
-
-void _epilog() {
-  DynamicLink__ModuleEpilog();
-  DynamicLink__ModuleDestructorsX((void **)(&_dtors));
-}
-
-void _unresolved() {
-  DynamicLink__ModuleUnresolved();
-}
-/* *** End REL Link Functions *** */
-
-
-/* *** Begin Implemented Class Functions *** */
-PhaseState Test_Npc_Cpp::_create() {
-  OSReport("Creating!\n");
-  return cPhs_COMPLEATE_e;
-}
-
-bool Test_Npc_Cpp::_delete() {
-  OSReport("Deleting!\n");
-  return true;
-}
-
-bool Test_Npc_Cpp::_execute() {
-  OSReport("Executing!\n");
-  return true;
-}
-
-bool Test_Npc_Cpp::_draw() {
-  OSReport("Drawing!\n");
-  return true;
-}
-/* *** End Implemented Class Functions *** */
+/* *** End Profile Definitions *** */
