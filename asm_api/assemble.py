@@ -407,6 +407,9 @@ try:
         
         code_chunk_size_in_bytes = len(binary_data)
         
+        if code_chunk_size_in_bytes >= 0x80000000:
+          raise Exception("The assembled code binary is much too large. This is probably a bug in the assembler.")
+        
         if using_free_space:
           next_free_space_offsets[file_path] += code_chunk_size_in_bytes
         
