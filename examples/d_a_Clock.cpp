@@ -55,7 +55,7 @@ PhaseState daClock::_create() {
 
 PhaseState daClock::_createUI() {
   J2DScreen * clockScreen = new J2DScreen();
-  if (clockScreen == 0) {
+  if (clockScreen == nullptr) {
     OSReport("daClock: Failed to initialize J2DScreen!");
     return cPhs_ERROR_e;
   }
@@ -63,7 +63,7 @@ PhaseState daClock::_createUI() {
   clockScreen->set(TIMER_BLO_NAME, mpTimerResArc);
   
   J2DTextBox * mainTextBox = (J2DTextBox *)clockScreen->search('timW');
-  if (mainTextBox == 0) {
+  if (mainTextBox == nullptr) {
     OSReport("daClock: Failed to find main time textbox!");
     return cPhs_ERROR_e;
   }
@@ -72,7 +72,7 @@ PhaseState daClock::_createUI() {
   mainTextBox->mpFont->mMonospaceWidth = 15;
   
   J2DTextBox * shadowTextBox = (J2DTextBox *)clockScreen->search('timB');
-  if (shadowTextBox == 0) {
+  if (shadowTextBox == nullptr) {
     OSReport("daClock: Failed to find time shadow textbox!");
     return cPhs_ERROR_e;
   }
@@ -157,9 +157,9 @@ profile_method_class l_daClock_Method {
     &daClock_Draw,
   },
   
-  0,
-  0,
-  0
+  nullptr,
+  nullptr,
+  nullptr
 };
 
 // Information that the engine needs to know about the actor
