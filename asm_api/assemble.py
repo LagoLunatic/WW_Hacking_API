@@ -64,6 +64,29 @@ next_free_space_offsets = {}
 for file_path, offset in free_space_start_offsets.items():
   next_free_space_offsets[file_path] = offset
 
+def parse_includes(asm):
+  asm_with_includes = ""
+  for line in asm.splitlines():
+    include_match = re.search(r"^\s*\.include\s+\"([^\"]+)\"\s*$", line, re.IGNORECASE)
+    if include_match:
+      relative_file_path = include_match.group(1)
+      file_path = os.path.join("./asm_patches", relative_file_path)
+      
+      file_ext = os.path.splitext(file_path)[1]
+      if file_ext == ".asm":
+        with open(file_path) as f:
+          included_file_contents = f.read()
+        included_asm = included_file_contents
+        included_asm = parse_includes(included_asm) # Parse recursive includes
+      else:
+        raise Exception("Included file with unknown extension: %s" % relative_file_path)
+      
+      asm_with_includes += included_asm + "\n"
+    else:
+      asm_with_includes += line + "\n"
+  
+  return asm_with_includes
+
 def get_code_and_relocations_from_elf(bin_name):
   elf = ELF()
   elf.read_from_file(bin_name)
@@ -167,18 +190,7 @@ try:
     with open(patch_path) as f:
       asm = f.read()
     
-    asm_with_includes = ""
-    for line in asm.splitlines():
-      include_match = re.search(r"^\s*\.include\s+\"([^\"]+)\"$", line, re.IGNORECASE)
-      if include_match:
-        relative_file_path = include_match.group(1)
-        file_path = os.path.join("./asm_patches", relative_file_path)
-        with open(file_path) as f:
-          included_file_contents = f.read()
-        asm_with_includes += included_file_contents + "\n"
-      else:
-        asm_with_includes += line + "\n"
-    
+    asm_with_includes = parse_includes(asm)
     print(asm_with_includes)
     
     patch_name = os.path.splitext(patch_filename)[0]
