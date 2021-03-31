@@ -382,7 +382,6 @@ try:
               continue
             
             if on_custom_symbols:
-              print(line)
               match = re.search(r"^ +0x(?:00000000)?([0-9a-f]{8}) +(\S+)", line)
               if not match:
                 continue
