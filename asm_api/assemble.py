@@ -64,6 +64,29 @@ next_free_space_offsets = {}
 for file_path, offset in free_space_start_offsets.items():
   next_free_space_offsets[file_path] = offset
 
+def parse_includes(asm):
+  asm_with_includes = ""
+  for line in asm.splitlines():
+    include_match = re.search(r"^\s*\.include\s+\"([^\"]+)\"\s*$", line, re.IGNORECASE)
+    if include_match:
+      relative_file_path = include_match.group(1)
+      file_path = os.path.join("./asm_patches", relative_file_path)
+      
+      file_ext = os.path.splitext(file_path)[1]
+      if file_ext == ".asm":
+        with open(file_path) as f:
+          included_file_contents = f.read()
+        included_asm = included_file_contents
+        included_asm = parse_includes(included_asm) # Parse recursive includes
+      else:
+        raise Exception("Included file with unknown extension: %s" % relative_file_path)
+      
+      asm_with_includes += included_asm + "\n"
+    else:
+      asm_with_includes += line + "\n"
+  
+  return asm_with_includes
+
 def get_code_and_relocations_from_elf(bin_name):
   elf = ELF()
   elf.read_from_file(bin_name)
@@ -167,18 +190,7 @@ try:
     with open(patch_path) as f:
       asm = f.read()
     
-    asm_with_includes = ""
-    for line in asm.splitlines():
-      include_match = re.match(r"\.include\s+\"([^\"]+)\"$", line, re.IGNORECASE)
-      if include_match:
-        relative_file_path = include_match.group(1)
-        file_path = os.path.join("./asm_patches", relative_file_path)
-        with open(file_path) as f:
-          included_file_contents = f.read()
-        asm_with_includes += included_file_contents + "\n"
-      else:
-        asm_with_includes += line + "\n"
-    
+    asm_with_includes = parse_includes(asm)
     print(asm_with_includes)
     
     patch_name = os.path.splitext(patch_filename)[0]
@@ -190,10 +202,10 @@ try:
       line = re.sub(r";.+$", "", line)
       line = line.strip()
       
-      open_file_match = re.match(r"\.open\s+\"([^\"]+)\"$", line, re.IGNORECASE)
-      org_match = re.match(r"\.org\s+0x([0-9a-f]+)$", line, re.IGNORECASE)
-      org_symbol_match = re.match(r"\.org\s+([\._a-z][\._a-z0-9]+|@NextFreeSpace)$", line, re.IGNORECASE)
-      branch_match = re.match(r"(?:b|beq|bne|blt|bgt|ble|bge)\s+0x([0-9a-f]+)(?:$|\s)", line, re.IGNORECASE)
+      open_file_match = re.search(r"^\s*\.open\s+\"([^\"]+)\"$", line, re.IGNORECASE)
+      org_match = re.search(r"^\s*\.org\s+0x([0-9a-f]+)$", line, re.IGNORECASE)
+      org_symbol_match = re.search(r"^\s*\.org\s+([\._a-z][\._a-z0-9]+|@NextFreeSpace)$", line, re.IGNORECASE)
+      branch_match = re.search(r"^\s*(?:b|beq|bne|blt|bgt|ble|bge)\s+0x([0-9a-f]+)(?:$|\s)", line, re.IGNORECASE)
       if open_file_match:
         relative_file_path = open_file_match.group(1)
         if most_recent_file_path or most_recent_org_offset is not None:
@@ -365,14 +377,14 @@ try:
         with open(map_name) as f:
           on_custom_symbols = False
           for line in f.read().splitlines():
-            if line.startswith(" .text          "):
+            if re.search(r"^ .\S+ +0x", line):
               on_custom_symbols = True
               continue
             
             if on_custom_symbols:
-              if not line:
-                break
-              match = re.search(r" +0x(?:00000000)?([0-9a-f]{8}) +(\S+)", line)
+              match = re.search(r"^ +0x(?:00000000)?([0-9a-f]{8}) {16,}(\S+)", line)
+              if not match:
+                continue
               symbol_address = int(match.group(1), 16)
               symbol_name = match.group(2)
               custom_symbols_for_file[symbol_name] = symbol_address
@@ -394,6 +406,9 @@ try:
           binary_data = f.read()
         
         code_chunk_size_in_bytes = len(binary_data)
+        
+        if code_chunk_size_in_bytes >= 0x80000000:
+          raise Exception("The assembled code binary is much too large. This is probably a bug in the assembler.")
         
         if using_free_space:
           next_free_space_offsets[file_path] += code_chunk_size_in_bytes
