@@ -382,7 +382,7 @@ try:
               continue
             
             if on_custom_symbols:
-              match = re.search(r"^ +0x(?:00000000)?([0-9a-f]{8}) +(\S+)", line)
+              match = re.search(r"^ +0x(?:00000000)?([0-9a-f]{8}) {16,}(\S+)", line)
               if not match:
                 continue
               symbol_address = int(match.group(1), 16)
