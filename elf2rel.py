@@ -18,6 +18,7 @@ ALLOWED_SECTIONS = [
   ".bss",
   ".rodata.str1.4",
   ".rodata.cst4",
+  ".rodata.cst8",
   ".sdata",
 ]
 
