@@ -139,11 +139,11 @@ int daThwomp_Draw(THWOMP_class* this) {
 
 int daThwomp_Execute(THWOMP_class* this) {
   // Move the entity.
-  cXyz* dest_pos = &g_dComIfG_gameInfo.mPlay.mpCurPlayerActor->parent.mNext.mPos;
+  cXyz* dest_pos = &g_dComIfG_gameInfo.mPlay.mpCurPlayerActor->parent.parent.mNext.mPos;
   float xDiff = fabs(this->parent.mCurrent.mPos.x - dest_pos->x);
   float yDiff = fabs(this->parent.mCurrent.mPos.y - dest_pos->y);
   float zDiff = fabs(this->parent.mCurrent.mPos.z - dest_pos->z);
-  short yRotDiff = fopAcM_searchActorAngleY(&this->parent, &g_dComIfG_gameInfo.mPlay.mpCurPlayerActor->parent);
+  short yRotDiff = fopAcM_searchActorAngleY(&this->parent, &g_dComIfG_gameInfo.mPlay.mpCurPlayerActor->parent.parent);
   
   OSReport("xDiff: %f", xDiff);
   OSReport("yDiff: %f", yDiff);

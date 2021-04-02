@@ -112,11 +112,11 @@ void _unresolved() {
 /** INTERFACE FUNCTIONS **/
 int daNPCTest_Create(NPC_Test_class* this) {
   // Run the constructor if it hasn't already been run.
-  if ((this->parent.parent.mMiscFlags & fopAc_ac_c__MiscFlags__Constructed) == 0) {
+  if ((this->parent.parent.mCondition & fopAc_ac_c__Condition__Constructed) == 0) {
     daNPCTest__daNPCTest(this);
     
     // Mark that the constructor has run.
-    this->parent.parent.mMiscFlags |= fopAc_ac_c__MiscFlags__Constructed;
+    this->parent.parent.mCondition |= fopAc_ac_c__Condition__Constructed;
   }
   
   // Load the archive.
@@ -184,7 +184,7 @@ int daNPCTest_Execute(NPC_Test_class* this) {
     this->parent.parent.mVelocityFwd = 0.0f;
   }
   
-  if (this->parent.parent.mEvtInfo.mActMode == dEvt__ActorActMode__InTalk) {
+  if (this->parent.parent.mEvtInfo.mCommand == dEvt__ActorCommand__InTalk) {
     daNPCTest__Actions[this->mCurrActionIndex](this);
     //this->parent.parent.mVelocityFwd = 0.0f;
   } else {
@@ -247,9 +247,9 @@ void daNPCTest__daNPCTest(NPC_Test_class* this) {
   // Set our attention distances and interaction mode.
   this->parent.parent.mAttentionDistances[1] = 0xAB;
   this->parent.parent.mAttentionDistances[3] = 0xA9;
-  this->parent.parent.mInteractFlags = fopAc_ac_c__InteractFlags__Targetable_B | fopAc_ac_c__InteractFlags__Talkable;
+  this->parent.parent.mAttentionFlags = fopAc_ac_c__AttentionFlags__LockOn_Talk | fopAc_ac_c__AttentionFlags__Action_Talk;
   
-  this->parent.parent.mEvtInfo.mpCheckCB = daNPCTest__XyzCheckCB;
+  this->parent.parent.mEvtInfo.mpCheckCB = (pointer)daNPCTest__XyzCheckCB;
   this->mXyzItemId = 0xFF;
   
   daNPCTest__InitCollision(this);
@@ -382,7 +382,7 @@ int daNPCTest__talk(NPC_Test_class* this) {
 
 void daNPCTest__UpdatePathFollowing(NPC_Test_class* this) {
   // Determine if we've reached the current path point and advance to the next one if so.
-  bool reachedCurrPoint = dNpc_PathRun_c__chkPointPass(&this->mPathRun, &this->parent.parent.mCurrent.mPos, this->mPathRun.mGoingForwards);
+  bool reachedCurrPoint = dNpc_PathRun_c__chkPointPass(&this->mPathRun, &this->parent.parent.mCurrent.mPos, this->mPathRun.mbGoingForwards);
   
   if (reachedCurrPoint) {
     dNpc_PathRun_c__nextIdxAuto(&this->mPathRun);   
@@ -575,13 +575,13 @@ bool daNPCTest__ChkTalk(NPC_Test_class* this) {
 
 /** EVENT FUNCTIONS **/
 void daNPCTest__eventOrder(NPC_Test_class* this) {
-  this->parent.parent.mEvtInfo.mBehaviorFlag |= dEvt__ActorBehaviorFlag__CanTalk | dEvt__ActorBehaviorFlag__CanTalkItem;
+  this->parent.parent.mEvtInfo.mCondition |= dEvt__ActorCondition__CanTalk | dEvt__ActorCondition__CanTalkItem;
 }
 
 void daNPCTest__checkOrder(NPC_Test_class* this) {
-  //OSReport("mActMode: %X", this->parent.parent.mEvtInfo.mActMode);
+  //OSReport("mCommand: %X", this->parent.parent.mEvtInfo.mCommand);
   
-  if (this->parent.parent.mEvtInfo.mActMode != dEvt__ActorActMode__InTalk) {
+  if (this->parent.parent.mEvtInfo.mCommand != dEvt__ActorCommand__InTalk) {
     return;
   }
 }

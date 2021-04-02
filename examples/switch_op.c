@@ -117,7 +117,7 @@ int daSwOp_Execute(SwitchOperator_class* this) {
     dSv_info_c__onSwitch(&g_dComIfG_gameInfo.mSvInfo, this->mSwitchToSet, this->parent.mCurrent.mRoomNo);
     
     if (this->mEventIndexToStart != -1) {
-      if (this->parent.mEvtInfo.mActMode == dEvt__ActorActMode__InDemo) {
+      if (this->parent.mEvtInfo.mCommand == dEvt__ActorCommand__InDemo) {
         this->mEventProgressState++;
       } else {
         // Start the event.
