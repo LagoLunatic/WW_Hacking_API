@@ -143,8 +143,9 @@ md5 = hashlib.md5()
 with open(out_rel_path, "rb") as f:
   md5.update(f.read())
 print("MD5 hash of the built REL file: %s" % md5.hexdigest())
-if md5.hexdigest() == md5_check:
-  print("MD5 hash matched.")
-else:
-  raise Exception("MD5 hash did not match! Expected: %s" % md5_check)
+if md5_check is not None:
+  if md5.hexdigest() == md5_check:
+    print("MD5 hash matched.")
+  else:
+    raise Exception("MD5 hash did not match! Expected: %s" % md5_check)
 
