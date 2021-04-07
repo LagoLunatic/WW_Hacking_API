@@ -8,6 +8,7 @@ Features:
 * Include C code in ASM patches (currently only supports main.dol, REL support planned)
 * Creating brand new actors from scratch coded in C, and compiling them into REL files
 * Replacing existing actors from the game with your new custom actors
+
 In the future it will also allow adding as many new actors as you want into the game without having to replace existing ones.  
 
 The C code you write can call the vanilla game's functions and use its global variables seamlessly, for example:
