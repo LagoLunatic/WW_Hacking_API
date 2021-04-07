@@ -78,6 +78,8 @@ def parse_includes(asm):
           included_file_contents = f.read()
         included_asm = included_file_contents
         included_asm = parse_includes(included_asm) # Parse recursive includes
+      elif file_ext == ".c":
+        included_asm = compile_c_to_asm(file_path)
       else:
         raise Exception("Included file with unknown extension: %s" % relative_file_path)
       
@@ -86,6 +88,37 @@ def parse_includes(asm):
       asm_with_includes += line + "\n"
   
   return asm_with_includes
+
+def compile_c_to_asm(c_src_path):
+  basename = os.path.basename(c_src_path)
+  basename_no_ext = os.path.splitext(basename)[0]
+  asm_path = os.path.join(temp_dir, basename_no_ext + ".asm")
+  command = [
+    get_bin("powerpc-eabi-gcc"),
+    "-mcpu=750",
+    "-fno-inline",
+    "-Wall",
+    "-Og",
+    "-fshort-enums",
+    "-S",
+    "-fno-asynchronous-unwind-tables", # Needed to get rid of unnecessary .eh_frame section from the ELF.
+    "-c", c_src_path,
+    "-o", asm_path,
+  ]
+  print(" ".join(command))
+  print()
+  result = call(command)
+  if result != 0:
+    raise Exception("Compiler call failed")
+  
+  with open(asm_path) as f:
+    compiled_asm = f.read()
+  
+  # Uncomment the below to debug the compiled ASM.
+  #with open("compiled_c_asm.asm", "w") as f:
+  #  f.write(compiled_asm)
+  
+  return compiled_asm
 
 def get_code_and_relocations_from_elf(bin_name):
   elf = ELF()
@@ -350,16 +383,35 @@ try:
         if result != 0:
           raise Exception("Assembler call failed")
         
+        # Determine the org offset for each individual section.
+        elf = ELF()
+        elf.read_from_file(o_name)
+        org_offset_for_section_by_name = OrderedDict()
+        curr_org_offset = org_offset
+        for elf_section in elf.sections:
+          if elf_section.flags & ELFSectionFlags.SHF_ALLOC.value != 0:
+            # Round the section's address up so it's properly aligned.
+            align_size = elf_section.addr_align
+            curr_org_offset = curr_org_offset + (align_size - curr_org_offset % align_size) % align_size
+            
+            org_offset_for_section_by_name[elf_section.name] = curr_org_offset
+            
+            curr_org_offset += elf_section.size
+        
         bin_name = os.path.join(temp_dir, "tmp_" + patch_name + "_%08X.bin" % org_offset)
         map_name = os.path.join(temp_dir, "tmp_" + patch_name + ".map")
         relocations = []
         command = [
           get_bin("powerpc-eabi-ld"),
-          "-Ttext", "%X" % org_offset,
           "-T", temp_linker_name,
           "-Map=" + map_name,
           o_name,
           "-o", bin_name
+        ]
+        # Set the section start arguments for each section.
+        command += [
+          "--section-start=%s=%X" % (section_name, section_org_offset)
+          for section_name, section_org_offset in org_offset_for_section_by_name.items()
         ]
         if file_path.endswith(".rel"):
           # Output an ELF with relocations for RELs.
