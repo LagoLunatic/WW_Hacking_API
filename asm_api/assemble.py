@@ -395,8 +395,10 @@ try:
             curr_org_offset = curr_org_offset + (align_size - curr_org_offset % align_size) % align_size
             
             org_offset_for_section_by_name[elf_section.name] = curr_org_offset
+            #print("%s %04X %04X" % (elf_section.name, curr_org_offset, elf_section.size))
             
             curr_org_offset += elf_section.size
+        code_chunk_size_in_bytes = (curr_org_offset - org_offset)
         
         bin_name = os.path.join(temp_dir, "tmp_" + patch_name + "_%08X.bin" % org_offset)
         map_name = os.path.join(temp_dir, "tmp_" + patch_name + ".map")
@@ -442,6 +444,9 @@ try:
               custom_symbols_for_file[symbol_name] = symbol_address
               temp_linker_script += "%s = 0x%08X;\n" % (symbol_name, symbol_address)
         
+        # Uncomment the below to debug the linker's map file.
+        #shutil.copyfile(map_name, "tmp_" + patch_name + ".map")
+        
         if file_path.endswith(".rel"):
           # This is for a REL, so we can't link it.
           # Instead read the ELF to get the assembled code and relocations out of it directly.
@@ -457,15 +462,17 @@ try:
         with open(bin_name, "rb") as f:
           binary_data = f.read()
         
-        code_chunk_size_in_bytes = len(binary_data)
+        bin_size = len(binary_data)
+        # The chunk size can be larger than the bin if the last section was a .bss section. But it can't be smaller.
+        assert code_chunk_size_in_bytes >= bin_size
         
-        if code_chunk_size_in_bytes >= 0x80000000:
+        if bin_size >= 0x80000000:
           raise Exception("The assembled code binary is much too large. This is probably a bug in the assembler.")
         
         if using_free_space:
           next_free_space_offsets[file_path] += code_chunk_size_in_bytes
         
-        bytes = list(struct.unpack("B"*code_chunk_size_in_bytes, binary_data))
+        bytes = list(struct.unpack("B"*bin_size, binary_data))
         diffs[file_path][org_offset] = OrderedDict()
         diffs[file_path][org_offset]["Data"] = bytes
         if relocations:
