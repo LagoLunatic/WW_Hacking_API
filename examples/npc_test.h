@@ -14,6 +14,8 @@ typedef struct NPC_Test_class {
   s8 mSpineJntIdx;
   
   dItem_data__ItemNo mXyzItemId;
+  
+  mDoExt_btpAnm mBtpAnim;
 } NPC_Test_class;
 
 struct JntCtrl_Params {

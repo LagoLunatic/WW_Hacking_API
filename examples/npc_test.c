@@ -3,6 +3,7 @@
 
 #define MODEL_ID 0x5C
 #define RUN_ANM_ID 0x1E
+#define BLINK_ANM_ID 0x70
 
 #define HEAD_JNT_NAME "head"
 #define SPINE_JNT_NAME "backbone1"
@@ -211,6 +212,11 @@ int daNPCTest_Draw(NPC_Test_class* this) {
   
   dScnKy_env_light_c__setLightTevColorType(&g_env_light, this->parent.mpMcaMorf->mpModel, &this->parent.parent.mTevStr);
   
+  mDoExt_btpAnm__entry(
+    &this->mBtpAnim, this->parent.mpMcaMorf->mpModel->mpModelData,
+    (short)this->mBtpAnim.parent.mpFrameCtrl->mCurrentTime
+  );
+  
   mDoExt_McaMorf__entryDL(this->parent.mpMcaMorf);
   
   return 1;
@@ -262,9 +268,7 @@ void daNPCTest__daNPCTest(NPC_Test_class* this) {
 
 int daNPCTest_createSolidHeap_CB(NPC_Test_class* this) {
   // Load the model and running animation from res/Object/Md.arc (Medli's archive).
-  // Model is file ID 0x5C within the archive.
   J3DModelData* modelData = dRes_control_c__getIDRes(RES_NAME, MODEL_ID, g_dComIfG_gameInfo.mResCtrl.mObjectInfo, 0x40);
-  // Running animation is file ID 0x1E.
   J3DAnmTransformKey* animData = dRes_control_c__getIDRes(RES_NAME, RUN_ANM_ID, g_dComIfG_gameInfo.mResCtrl.mObjectInfo, 0x40);
   
   // Create a new instance of the animation manager. It will handle updating and transitioning between animations for us.
@@ -289,6 +293,16 @@ int daNPCTest_createSolidHeap_CB(NPC_Test_class* this) {
   this->parent.mpMcaMorf->mpModel->mpUserData = (void *)this;
   
   daNPCTest__InitJntCtrl(this, modelData);
+  
+  
+  // Load the BTP animation (which handles texture swaps for the face).
+  J3DAnmTexPattern* btpAnimData = dRes_control_c__getIDRes(RES_NAME, BLINK_ANM_ID, g_dComIfG_gameInfo.mResCtrl.mObjectInfo, 0x40);
+  
+  // Initialize the BTP animation.
+  mDoExt_btpAnm__init(
+    &this->mBtpAnim, modelData, btpAnimData,
+    1, 1, 1.0f, 0, -1, false, 0
+  );
   
   return 1;
 }
@@ -402,8 +416,17 @@ void daNPCTest__UpdatePathFollowing(NPC_Test_class* this) {
 }
 
 void daNPCTest__setMtx(NPC_Test_class* this, bool unk) {
-  // Play the animation.
+  // Play the BCK animation.
   mDoExt_McaMorf__play(this->parent.mpMcaMorf, &this->parent.parent.mCurrent.mPos, 0, 0);
+  
+  // Play the BTP animation.
+  if (mDoExt_baseAnm__play(&this->mBtpAnim.parent)) {
+    mDoExt_baseAnm__initPlay(
+      &this->mBtpAnim.parent,
+      this->mBtpAnim.mpAnmPattern->field_0x6, // Duration
+      1, 1.0f, 0, -1, true
+    );
+  }
   
   // Correct this actor's position relative to Bg collision (walkable collision such as floors or walls it may have run into).
   dBgS_Acch__CrrPos(&this->parent.mObjAcch.parent, &g_dComIfG_gameInfo.mPlay.mBgS);

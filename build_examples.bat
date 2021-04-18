@@ -5,5 +5,5 @@ if %errorlevel% neq 0 exit /b %errorlevel%
 py build_rel.py "./examples/switch_op.c" 0x1A0 g_profile_SwitchOperator --md5_check cd385ac9214bea7128830ba4a0616f49
 if %errorlevel% neq 0 exit /b %errorlevel%
 
-py build_rel.py "./examples/npc_test.c" 0x58 g_profile_NPC_Test --rels_arc "../Random Seeds/WW Random EnemyRandoTest/files/RELS.arc" --md5_check f504eb03e77af572820713b1889fc82c
+py build_rel.py "./examples/npc_test.c" 0x58 g_profile_NPC_Test --rels_arc "../Random Seeds/WW Random EnemyRandoTest/files/RELS.arc" --md5_check 9811b281c84bf3ab5163de205e71a8c4
 if %errorlevel% neq 0 exit /b %errorlevel%
