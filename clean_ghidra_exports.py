@@ -428,8 +428,17 @@ for func_name, address, return_value, arguments, func_size, namespace in func_da
   
   should_comment_out = False
   if symbol_name in seen_symbol_names:
-    # Duplicate name. Comment it out for now.
-    should_comment_out = True
+    #count number of occurrences of substring in list
+    def countX(lst, x):
+      count = 0
+      for ele in lst:
+          occurrences = ele.count(symbol_name)
+          if (occurrences > 0):
+              count = count + 1
+      return count
+    old_symbol_name = symbol_name
+    symbol_name += "_%d" % countX(seen_symbol_names, symbol_name) #append '_X' to symbol and function signature where X is the number of occurrences
+    func_signature = func_signature.replace(old_symbol_name, symbol_name, 1)
   
   if symbol_name == "MSL_C_PPCEABI_bare_H__fwide":
     # Causes issues for some reason, just comment it out since it's unimportant
