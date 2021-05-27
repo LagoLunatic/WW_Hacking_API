@@ -21208,7 +21208,6 @@ DAT_CardSerialNo = 0x803B5028;
 DAT_803b502c = 0x803B502C;
 DAT_803b5030 = 0x803B5030;
 m_Do_MemCardRWmng__sTmpBuf = 0x803B5040;
-DAT_803b703c = 0x803B703C;
 m_Do_MemCardRWmng__sTmpBuf2 = 0x803B7040;
 m_Do_ext__m_Do_gba_com__g_mDoGaC_gbaCom = 0x803B904C;
 DAT_803b904f = 0x803B904F;

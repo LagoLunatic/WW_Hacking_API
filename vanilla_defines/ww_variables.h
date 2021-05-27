@@ -7410,7 +7410,6 @@ extern undefined4 DAT_CardSerialNo;
 extern undefined4 DAT_803b502c;
 extern undefined4 DAT_803b5030;
 extern card_savebuffer m_Do_MemCardRWmng__sTmpBuf;
-extern undefined4 DAT_803b703c;
 extern card_savebuffer m_Do_MemCardRWmng__sTmpBuf2;
 extern undefined1 m_Do_ext__m_Do_gba_com__g_mDoGaC_gbaCom;
 extern undefined1 DAT_803b904f;
