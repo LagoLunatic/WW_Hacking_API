@@ -208,6 +208,7 @@ try:
   
   all_asm_file_paths = glob.glob('./asm_patches/*.asm')
   all_asm_files = [os.path.basename(asm_path) for asm_path in all_asm_file_paths]
+  all_asm_files.sort()
   if "main.asm" in all_asm_files:
     all_asm_files.remove("main.asm")
     # Always do main.asm first so the custom symbols in main.dol are defined for all the other patches to use.
