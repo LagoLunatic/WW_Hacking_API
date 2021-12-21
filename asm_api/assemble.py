@@ -84,6 +84,7 @@ def parse_includes(asm):
         raise Exception("Included file with unknown extension: %s" % relative_file_path)
       
       asm_with_includes += included_asm + "\n"
+      asm_with_includes += ".section \".text\"\n"
     else:
       asm_with_includes += line + "\n"
   
