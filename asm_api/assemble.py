@@ -14,6 +14,8 @@ sys.path.insert(0, "./wwrando")
 from fs_helpers import *
 from asm.elf import *
 
+from ghidra_symbol_converter import ghidra_to_framework_symbols, framework_symbols_name_to_addr
+
 if sys.platform == "win32":
   devkitbasepath = r"C:\devkitPro\devkitPPC\bin"
 else:
@@ -147,8 +149,16 @@ def get_code_and_relocations_from_elf(bin_name):
         is_local_relocation = try_apply_local_relocation(bin_name, elf_relocation, elf_symbol)
         
         if not is_local_relocation:
+          symbol_name = elf_symbol.name
+          
+          if symbol_name not in framework_symbols_name_to_addr and ":" not in symbol_name:
+            # The symbol isn't present in framework.map and isn't a vanilla REL symbol with a colon either.
+            if symbol_name in ghidra_to_framework_symbols:
+              # If it's a symbol present in the Ghidra exports, convert it to the equivalent in framework.map.
+              symbol_name = ghidra_to_framework_symbols[symbol_name]
+          
           relocations_in_elf.append(OrderedDict([
-            ["SymbolName", elf_symbol.name],
+            ["SymbolName", symbol_name],
             ["Offset", elf_relocation.relocation_offset],
             ["Type", elf_relocation.type.name],
           ]))
