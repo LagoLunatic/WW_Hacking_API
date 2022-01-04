@@ -423,7 +423,7 @@ void daNPCTest__setMtx(NPC_Test_class* this, bool unk) {
   if (mDoExt_baseAnm__play(&this->mBtpAnim.parent)) {
     mDoExt_baseAnm__initPlay(
       &this->mBtpAnim.parent,
-      this->mBtpAnim.mpAnmPattern->field_0x6, // Duration
+      this->mBtpAnim.mpAnmPattern->parent.mDuration,
       1, 1.0f, 0, -1, true
     );
   }
