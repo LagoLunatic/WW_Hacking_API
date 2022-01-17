@@ -151,8 +151,8 @@ def get_code_and_relocations_from_elf(bin_name):
         if not is_local_relocation:
           symbol_name = elf_symbol.name
           
-          if symbol_name not in framework_symbols_name_to_addr and ":" not in symbol_name:
-            # The symbol isn't present in framework.map and isn't a vanilla REL symbol with a colon either.
+          if symbol_name not in framework_symbols_name_to_addr and "$$" not in symbol_name:
+            # The symbol isn't present in framework.map and isn't a vanilla REL symbol (double dollar sign) either.
             if symbol_name in ghidra_to_framework_symbols:
               # If it's a symbol present in the Ghidra exports, convert it to the equivalent in framework.map.
               symbol_name = ghidra_to_framework_symbols[symbol_name]
