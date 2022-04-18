@@ -244,11 +244,11 @@ void daNPCTest__daNPCTest(NPC_Test_class* this) {
   dNpc_EventCut_c__setActorInfo2(&this->eventActor, "Md1", &this->parent);
   
   // Initialize variables that need to default to 0
-  this->parent.mJntCtrl.field_0xc = 0;
-  this->parent.mJntCtrl.field_0xb = 0;
+  this->parent.mJntCtrl.field8_0xc = 0;
+  this->parent.mJntCtrl.field7_0xb = 0;
   this->parent.mEventCut.mpActor = 0;
   this->parent.mEventCut.mpTalkActor = 0;
-  this->parent.field_0x32c = 0;
+  this->parent.field7_0x32c = 0;
   
   // Set our attention distances and interaction mode.
   this->parent.parent.mAttentionDistances[1] = 0xAB;
@@ -506,7 +506,7 @@ void daNPCTest__lookBack(NPC_Test_class* this) {
   
   dNpc_playerEyePos(-20.0f, &dstPos);
   
-  if (this->parent.mJntCtrl.field_0xa == 0) {
+  if (this->parent.mJntCtrl.field6_0xa == 0) {
     this->mMaxFollowRotVel = 0;
   } else {
     cLib_addCalcAngleS2(

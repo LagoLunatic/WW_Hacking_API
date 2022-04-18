@@ -273,7 +273,7 @@ for line in input_str.splitlines():
         field_array_multiplier *= array_size
         field_name = field_name_before_array
       
-      field_hex_offset_name_match = re.search(r"^field_0x([0-9a-f]+)$", field_name)
+      field_hex_offset_name_match = re.search(r"^field\d*_0x([0-9a-f]+)$", field_name)
       if field_hex_offset_name_match:
         correct_offset = int(field_hex_offset_name_match.group(1), 16)
         if correct_offset != offset_in_current_struct:
