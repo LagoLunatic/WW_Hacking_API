@@ -228,9 +228,11 @@ def try_apply_local_relocation(bin_name, elf_relocation, elf_symbol):
   return False
 
 try:
-  # First delete any old patch diffs.
+  # First delete any old patch diffs and custom symbols.
   for diff_path in glob.glob('./asm_patches/patch_diffs/*_diff.txt'):
     os.remove(diff_path)
+  with open("./asm_patches/custom_symbols.txt", "w") as f:
+    f.write(yaml.dump(custom_symbols, Dumper=yaml.CDumper, default_flow_style=False))
   
   with open("./vanilla_defines/ww_linker.ld") as f:
     linker_script = f.read()
