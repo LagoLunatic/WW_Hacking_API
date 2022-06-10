@@ -28,13 +28,17 @@ Huge thanks to [Jasper](https://github.com/magcius) for documenting tons of them
 ### Requirements
 
 Download and install the following:
-* Python 3.8.2: https://www.python.org/downloads/release/python-382/
+* git: https://git-scm.com/downloads
+* Python 3.9.6: https://www.python.org/downloads/release/python-396/
 * devkitPro: https://devkitpro.org/
 
 ### Usage
 
 First, clone the repository with this command:  
-`git clone --recurse-submodules https://github.com/LagoLunatic/WW_Hacking_API.git`
+`git clone --recurse-submodules https://github.com/LagoLunatic/WW_Hacking_API.git`  
+
+Then install dependencies by running:  
+`py -3 -m pip install -r requirements.txt`  
 
 #### Patching existing ASM code
 

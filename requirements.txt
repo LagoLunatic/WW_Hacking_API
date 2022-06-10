@@ -1,1 +1,2 @@
 PyYAML==5.4
+appdirs==1.4.4
