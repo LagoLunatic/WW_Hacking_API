@@ -4,3 +4,4 @@
 ; You can also .include other ASM files into this one. For example:
 ;.include "includes/skip_intro.asm"
 ;.include "includes/bgm_file.asm"
+;.include "includes/fix_vanilla_bugs.asm"
