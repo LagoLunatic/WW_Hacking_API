@@ -7,6 +7,7 @@ import re
 sys.path.insert(0, "./wwrando")
 
 from fs_helpers import *
+from wwlib.yaz0 import Yaz0
 from wwlib.rarc import RARC
 from wwlib.dol import DOL
 from wwlib.rel import REL, RELRelocation, RELRelocationType
@@ -20,6 +21,7 @@ class GameCubeFilesystem:
     self.arcs_by_path = {}
     self.rels_by_path = {}
     self.symbol_maps_by_path = {}
+    self.raw_files_by_path = {}
     self.used_actor_ids = list(range(0x1F6))
     
     self.read_text_file_lists()
@@ -43,6 +45,9 @@ class GameCubeFilesystem:
       self.free_space_start_offsets = yaml.safe_load(f)
   
   def save_modified_iso_files(self, output_folder_path):
+    for file_path, data in self.raw_files_by_path.items():
+      self.gcm.changed_files[file_path] = data
+    
     self.dol.save_changes()
     self.gcm.changed_files["sys/main.dol"] = self.dol.data
     
@@ -132,6 +137,25 @@ class GameCubeFilesystem:
       
       self.symbol_maps_by_path[map_path] = symbol_map
       return symbol_map
+  
+  def get_raw_file(self, file_path):
+    file_path = file_path.replace("\\", "/")
+    
+    if file_path in self.raw_files_by_path:
+      return self.raw_files_by_path[file_path]
+    else:
+      if file_path.startswith("files/rels/"):
+        raise Exception("Cannot read a REL as a raw file.")
+      elif file_path == "sys/main.dol":
+        raise Exception("Cannot read the DOL as a raw file.")
+      
+      data = self.gcm.read_file_data(file_path)
+      
+      if Yaz0.check_is_compressed(data):
+        data = Yaz0.decompress(data)
+      
+      self.raw_files_by_path[file_path] = data
+      return data
   
   def get_main_symbols(self, framework_map_contents):
     main_symbols = {}
