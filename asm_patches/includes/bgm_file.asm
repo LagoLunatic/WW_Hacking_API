@@ -69,7 +69,7 @@
   bl get_stage_bgm_info_list
   mr r0, r3
 
-; Replace checks that hardcode the number of stage BGM infos to instead load the count from th efile.
+; Replace checks that hardcode the number of stage BGM infos to instead load the count from the file.
 .org 0x802AAECC
   bl compare_r29_to_stage_entry_count_minus_1
 .org 0x802AAED8
