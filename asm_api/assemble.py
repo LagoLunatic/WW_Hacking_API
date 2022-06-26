@@ -69,7 +69,9 @@ for file_path, offset in free_space_start_offsets.items():
 def parse_includes(asm):
   asm_with_includes = ""
   for line in asm.splitlines():
-    include_match = re.search(r"^\s*\.include\s+\"([^\"]+)\"\s*$", line, re.IGNORECASE)
+    line = re.sub(r";.+$", "", line)
+    line = line.strip()
+    include_match = re.search(r"^\.include\s+\"([^\"]+)\"$", line, re.IGNORECASE)
     if include_match:
       relative_file_path = include_match.group(1)
       file_path = os.path.join("./asm_patches", relative_file_path)
