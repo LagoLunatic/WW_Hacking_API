@@ -13,6 +13,7 @@ NAMESPACES_TO_NOT_QUALIFY = [
   "f_pc_leaf",
   "f_op_actor",
   "f_op_actor_mng",
+  "f_op_actor_iter",
   "mtx",
   "d_kankyo",
   "d_bg_s",
