@@ -13,6 +13,7 @@ import sys
 sys.path.insert(0, "./wwrando")
 from fs_helpers import *
 from asm.elf import *
+from wwlib.texture_utils import encode_image_from_path, ImageFormat, PaletteFormat
 
 from ghidra_symbol_converter import ghidra_to_framework_symbols, framework_symbols_name_to_addr
 
@@ -278,6 +279,8 @@ try:
       org_symbol_match = re.search(r"^\s*\.org\s+([\._a-z][\._a-z0-9]+|@NextFreeSpace)$", line, re.IGNORECASE)
       branch_match = re.search(r"^\s*(?:b|beq|bne|blt|bgt|ble|bge)\s+0x([0-9a-f]+)(?:$|\s)", line, re.IGNORECASE)
       set_match = re.search(r"^\s*\.(?:set|equ|equiv)\s+\S+,.+$", line, re.IGNORECASE)
+      texture_match = re.search(r"^\s*\.texture\s+\"([^\"]+)\",\s*\"([^\"]+)\"(?:,\s*\"([^\"]+)\")?$", line, re.IGNORECASE)
+      palette_match = re.search(r"^\s*\.palette\s+\"([^\"]+)\",\s*\"([^\"]+)\",\s*\"([^\"]+)\"$", line, re.IGNORECASE)
       if open_file_match:
         relative_file_path = open_file_match.group(1)
         if most_recent_file_path or most_recent_org_offset is not None:
@@ -324,6 +327,37 @@ try:
       elif set_match:
         code_chunks[patch_name]["__set_value_lines"] += line + "\n"
         continue
+      elif texture_match:
+        # Encodes an image file to raw bytes of the specified image format.
+        texture_relative_path = texture_match.group(1)
+        texture_format_str = texture_match.group(2)
+        palette_format_str = texture_match.group(3)
+        
+        texture_path = os.path.join("./asm_patches", texture_relative_path)
+        texture_format = ImageFormat[texture_format_str]
+        if palette_format_str is None:
+          palette_format = PaletteFormat.IA8
+        else:
+          palette_format = PaletteFormat[palette_format_str]
+        
+        image_data, _, _, _, _ = encode_image_from_path(
+          texture_path, texture_format, palette_format
+        )
+        line = ".byte " + ", ".join(["0x%02X" % byte for byte in read_all_bytes(image_data)])
+      elif palette_match:
+        # Encodes an image file to raw bytes of the specified image format.
+        texture_relative_path = palette_match.group(1)
+        texture_format_str = palette_match.group(2)
+        palette_format_str = palette_match.group(3)
+        
+        texture_path = os.path.join("./asm_patches", texture_relative_path)
+        texture_format = ImageFormat[texture_format_str]
+        palette_format = PaletteFormat[palette_format_str]
+        
+        _, palette_data, _, _, _ = encode_image_from_path(
+          texture_path, texture_format, palette_format
+        )
+        line = ".byte " + ", ".join(["0x%02X" % byte for byte in read_all_bytes(palette_data)])
       elif line == ".close":
         most_recent_file_path = None
         most_recent_org_offset = None
