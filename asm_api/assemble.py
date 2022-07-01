@@ -265,6 +265,7 @@ try:
     
     patch_name = os.path.splitext(patch_filename)[0]
     code_chunks[patch_name] = OrderedDict()
+    code_chunks[patch_name]["__set_value_lines"] = ""
     
     most_recent_file_path = None
     most_recent_org_offset = None
@@ -276,6 +277,7 @@ try:
       org_match = re.search(r"^\s*\.org\s+0x([0-9a-f]+)$", line, re.IGNORECASE)
       org_symbol_match = re.search(r"^\s*\.org\s+([\._a-z][\._a-z0-9]+|@NextFreeSpace)$", line, re.IGNORECASE)
       branch_match = re.search(r"^\s*(?:b|beq|bne|blt|bgt|ble|bge)\s+0x([0-9a-f]+)(?:$|\s)", line, re.IGNORECASE)
+      set_match = re.search(r"^\s*\.(?:set|equ|equiv)\s+\S+,.+$", line, re.IGNORECASE)
       if open_file_match:
         relative_file_path = open_file_match.group(1)
         if most_recent_file_path or most_recent_org_offset is not None:
@@ -319,6 +321,9 @@ try:
         branch_temp_label = "branch_label_%X" % branch_dest
         local_branches_linker_script_for_file[most_recent_file_path] += "%s = 0x%X;\n" % (branch_temp_label, branch_dest)
         line = re.sub(r"0x" + branch_match.group(1), branch_temp_label, line, 1)
+      elif set_match:
+        code_chunks[patch_name]["__set_value_lines"] += line + "\n"
+        continue
       elif line == ".close":
         most_recent_file_path = None
         most_recent_org_offset = None
@@ -354,6 +359,9 @@ try:
   
   for patch_name, code_chunks_for_patch in code_chunks.items():
     diffs = OrderedDict()
+    
+    set_value_lines = code_chunks_for_patch["__set_value_lines"]
+    del code_chunks_for_patch["__set_value_lines"]
     
     for file_path, code_chunks_for_file in code_chunks_for_patch.items():
       if file_path not in custom_symbols:
@@ -410,6 +418,7 @@ try:
         with open(temp_asm_name, "w") as f:
           f.write(asm_macros) # Add our custom asm macros to all asm at the start.
           f.write("\n")
+          f.write(set_value_lines)
           f.write(temp_asm)
         
         o_name = os.path.join(temp_dir, "tmp_" + patch_name + "_%08X.o" % org_offset)
