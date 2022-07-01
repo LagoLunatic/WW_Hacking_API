@@ -274,13 +274,13 @@ try:
       line = re.sub(r";.+$", "", line)
       line = line.strip()
       
-      open_file_match = re.search(r"^\s*\.open\s+\"([^\"]+)\"$", line, re.IGNORECASE)
-      org_match = re.search(r"^\s*\.org\s+0x([0-9a-f]+)$", line, re.IGNORECASE)
-      org_symbol_match = re.search(r"^\s*\.org\s+([\._a-z][\._a-z0-9]+|@NextFreeSpace)$", line, re.IGNORECASE)
-      branch_match = re.search(r"^\s*(?:b|beq|bne|blt|bgt|ble|bge)\s+0x([0-9a-f]+)(?:$|\s)", line, re.IGNORECASE)
-      set_match = re.search(r"^\s*\.(?:set|equ|equiv)\s+\S+,.+$", line, re.IGNORECASE)
-      texture_match = re.search(r"^\s*\.texture\s+\"([^\"]+)\",\s*\"([^\"]+)\"(?:,\s*\"([^\"]+)\")?$", line, re.IGNORECASE)
-      palette_match = re.search(r"^\s*\.palette\s+\"([^\"]+)\",\s*\"([^\"]+)\",\s*\"([^\"]+)\"$", line, re.IGNORECASE)
+      open_file_match = re.search(r"^\.open\s+\"([^\"]+)\"$", line, re.IGNORECASE)
+      org_match = re.search(r"^\.org\s+0x([0-9a-f]+)$", line, re.IGNORECASE)
+      org_symbol_match = re.search(r"^\.org\s+([\._a-z][\._a-z0-9]+|@NextFreeSpace)$", line, re.IGNORECASE)
+      branch_match = re.search(r"^(?:b|beq|bne|blt|bgt|ble|bge)\s+0x([0-9a-f]+)(?:$|\s)", line, re.IGNORECASE)
+      set_match = re.search(r"^\.(?:set|equ|equiv)\s+\S+,.+$", line, re.IGNORECASE)
+      texture_match = re.search(r"^\.texture\s+\"([^\"]+)\",\s*\"([^\"]+)\"(?:,\s*\"([^\"]+)\")?$", line, re.IGNORECASE)
+      palette_match = re.search(r"^\.palette\s+\"([^\"]+)\",\s*\"([^\"]+)\",\s*\"([^\"]+)\"$", line, re.IGNORECASE)
       if open_file_match:
         relative_file_path = open_file_match.group(1)
         if most_recent_file_path or most_recent_org_offset is not None:
