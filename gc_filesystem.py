@@ -16,6 +16,9 @@ from wwlib.gcm import GCM
 ASM_API_PATH = "./asm_api"
 ASM_PATCHES_PATH = "./asm_patches"
 
+class InvalidCleanISOError(Exception):
+  pass
+
 class GameCubeFilesystem:
   def __init__(self, clean_iso_path):
     self.arcs_by_path = {}
