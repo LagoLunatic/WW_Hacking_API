@@ -29,7 +29,7 @@ Huge thanks to [Jasper](https://github.com/magcius) for documenting tons of them
 
 Download and install the following:
 * git: https://git-scm.com/downloads
-* Python 3.9.6: https://www.python.org/downloads/release/python-396/
+* Python 3.10.7: https://www.python.org/downloads/release/python-3107/
 * devkitPro: https://devkitpro.org/
 
 ### Usage
