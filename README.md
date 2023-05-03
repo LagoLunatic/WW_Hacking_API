@@ -32,13 +32,17 @@ Download and install the following:
 * Python 3.10.7: https://www.python.org/downloads/release/python-3107/
 * devkitPro: https://devkitpro.org/
 
-### Usage
+### Installation
 
-First, clone the repository with this command:  
+First, clone this repository to your computer by running this in a command prompt:  
 `git clone --recurse-submodules https://github.com/LagoLunatic/WW_Hacking_API.git`  
 
-Then install dependencies by running:  
-`py -3 -m pip install -r requirements.txt`  
+Then open the WW_Hacking_API folder in a command prompt and install Python dependencies by running:  
+`py -3.10 -m pip install -r requirements.txt`  
+
+### Usage
+
+The hacking API can be used to write code in two distinct ways: editing the vanilla game's existing code with ASM patches, or creating new actors written in C.
 
 #### Patching existing ASM code
 
