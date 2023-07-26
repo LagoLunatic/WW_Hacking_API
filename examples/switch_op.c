@@ -57,21 +57,44 @@ int daSwOp_Draw(SwitchOperator_class* this) {
 }
 
 int daSwOp_Execute(SwitchOperator_class* this) {
-  if (this->mEventProgressState == 1) {
+  daSwOp__eventCheck(this);
+  
+  daSwOp__switchCheck(this);
+  
+  return 1;
+}
+
+void daSwOp__eventCheck(SwitchOperator_class* this) {
+  if (this->mEventProgressState == 0) {
+    if (this->mEventIndexToStart != -1) {
+      bool ownSwitchIsSet = dSv_info_c__isSwitch(&g_dComIfG_gameInfo.mSvInfo, this->mSwitchToSet, this->parent.mCurrent.mRoomNo);
+      if (ownSwitchIsSet) {
+        if (this->parent.mEvtInfo.mCommand == dEvt__ActorCommand__InDemo) {
+          this->mEventProgressState++;
+        } else {
+          // Start the event.
+          fopAcM_orderOtherEventId(&this->parent, this->mEventIndexToStart, this->mEVNTIndexToStart, 0xFFFF, 0, 1);
+        }
+      }
+    }
+  } else if (this->mEventProgressState == 1) {
     bool eventFinished = dEvent_manager_c__endCheck(&g_dComIfG_gameInfo.mPlay.mEventMgr, this->mEventIndexToStart);
     if (eventFinished) {
-      g_dComIfG_gameInfo.mPlay.mEvtCtrl.mStateFlags |= 8; // Should go back to checking if any events are ready to play.
+      // This flag indicates this event should be finished, and the game should go back to
+      // checking if any other events are ready to play.
+      g_dComIfG_gameInfo.mPlay.mEvtCtrl.mStateFlags |= 8;
       this->mEventProgressState++;
     }
-    return 1;
-  }
-  if (this->mEventProgressState != 0) {
+    return;
+  } else {
     // Event already played?
-    return 1;
+    return;
   }
-  
+}
+
+void daSwOp__switchCheck(SwitchOperator_class* this) {
   if (this->isDisabled) {
-    return 1;
+    return;
   }
   
   u8 switchToCheck = this->mFirstSwitchToCheck;
@@ -116,24 +139,12 @@ int daSwOp_Execute(SwitchOperator_class* this) {
     // Set the switch.
     dSv_info_c__onSwitch(&g_dComIfG_gameInfo.mSvInfo, this->mSwitchToSet, this->parent.mCurrent.mRoomNo);
     
-    if (this->mEventIndexToStart != -1) {
-      if (this->parent.mEvtInfo.mCommand == dEvt__ActorCommand__InDemo) {
-        this->mEventProgressState++;
-      } else {
-        // Start the event.
-        fopAcM_orderOtherEventId(&this->parent, this->mEventIndexToStart, this->mEVNTIndexToStart, 0xFFFF, 0, 1);
-      }
-    }
-    
     if (!this->mContinuous) {
       this->isDisabled = true;
     }
   } else if (this->mContinuous) {
     dSv_info_c__offSwitch(&g_dComIfG_gameInfo.mSvInfo, this->mSwitchToSet, this->parent.mCurrent.mRoomNo);
-    // TODO: maybe have an event param for unsetting, too?
   }
-  
-  return 1;
 }
 
 

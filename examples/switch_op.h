@@ -19,6 +19,7 @@ typedef struct SwitchOperator_class {
   u8 mNumSwitchesToCheck;
   
   u8 mEVNTIndexToStart;
+  // TODO: maybe have an event param called when the switch is unset, too?
   s16 mEventIndexToStart;
   u8 mEventProgressState;
   
@@ -33,3 +34,6 @@ int daSwOp_IsDelete(SwitchOperator_class* this);
 int daSwOp_Delete(SwitchOperator_class* this);
 int daSwOp_Draw(SwitchOperator_class* this);
 int daSwOp_Execute(SwitchOperator_class* this);
+
+void daSwOp__eventCheck(SwitchOperator_class* this);
+void daSwOp__switchCheck(SwitchOperator_class* this);
