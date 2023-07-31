@@ -67,8 +67,14 @@ int daSwOp_Execute(SwitchOperator_class* this) {
 void daSwOp__eventCheck(SwitchOperator_class* this) {
   if (this->mEventProgressState == 0) {
     if (this->mEventIndexToStart != -1) {
-      if (this->parent.mEvtInfo.mCommand == dEvt__ActorCommand__InDemo) {
-        this->mEventProgressState++;
+      bool ownSwitchIsSet = dSv_info_c__isSwitch(&g_dComIfG_gameInfo.mSvInfo, this->mSwitchToSet, this->parent.mCurrent.mRoomNo);
+      if (ownSwitchIsSet) {
+        if (this->parent.mEvtInfo.mCommand == dEvt__ActorCommand__InDemo) {
+          this->mEventProgressState++;
+        } else {
+          // Start the event.
+          fopAcM_orderOtherEventId(&this->parent, this->mEventIndexToStart, this->mEVNTIndexToStart, 0xFFFF, 0, 1);
+        }
       }
     }
   } else if (this->mEventProgressState == 1) {
@@ -90,8 +96,6 @@ void daSwOp__switchCheck(SwitchOperator_class* this) {
   if (this->isDisabled) {
     return;
   }
-  
-  bool switchIsAlreadySet = dSv_info_c__isSwitch(&g_dComIfG_gameInfo.mSvInfo, this->mSwitchToSet, this->parent.mCurrent.mRoomNo);
   
   u8 switchToCheck = this->mFirstSwitchToCheck;
   int numSet = 0;
@@ -131,19 +135,14 @@ void daSwOp__switchCheck(SwitchOperator_class* this) {
       // Condition no longer met. Reset the counter.
       this->mRemainingFramesToWait = this->mTotalFramesToWait;
     }
-  } else if (conditionMet && !switchIsAlreadySet) {
+  } else if (conditionMet) {
     // Set the switch.
     dSv_info_c__onSwitch(&g_dComIfG_gameInfo.mSvInfo, this->mSwitchToSet, this->parent.mCurrent.mRoomNo);
-    
-    if (this->mEventIndexToStart != -1) {
-      // Start the event.
-      fopAcM_orderOtherEventId(&this->parent, this->mEventIndexToStart, this->mEVNTIndexToStart, 0xFFFF, 0, 1);
-    }
     
     if (!this->mContinuous) {
       this->isDisabled = true;
     }
-  } else if (!conditionMet && switchIsAlreadySet && this->mContinuous) {
+  } else if (this->mContinuous) {
     dSv_info_c__offSwitch(&g_dComIfG_gameInfo.mSvInfo, this->mSwitchToSet, this->parent.mCurrent.mRoomNo);
   }
 }
