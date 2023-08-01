@@ -77,6 +77,15 @@ command = [
   "-Og",
   "-g",
   "-fshort-enums",
+  # -fno-jump-tables disables a compiler optimization where GCC would turn
+  # switch statements into lists of relocated pointers to offsets within
+  # the function to jump to. Although the GameCube supports these just fine
+  # and the vanilla game used them plenty, we can't use them here because
+  # GCC chooses the type of relocation for the jump table to use as
+  # R_PPC_REL32 (32-bit relative offset relocation), which is not supported.
+  # The closest we have is R_PPC_ADDR32 (32-bit absolute address relocation)
+  # but there is no clear way to convert between these.
+  "-fno-jump-tables",
   "-c", c_src_path,
   "-o", elf_path,
 ]
@@ -108,6 +117,8 @@ command = [
   "-m", "powerpc",
   "-D",
   "-EB",
+  "--disassemble-zeroes",
+  "--reloc",
   linked_elf_path,
 ]
 print(" ".join(command))

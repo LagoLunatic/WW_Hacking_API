@@ -74,7 +74,7 @@ def convert_elf_to_rel(in_elf_path, out_rel_path, rel_id, actor_profile_name, re
         #print("%X" % elf_symbol.section_index)
         
         if elf_symbol.section_index == 0:
-          raise Exception("Unresolved external symbol in main.dol: %s" % elf_symbol.name)
+          raise Exception("Unresolved external symbol: %s" % elf_symbol.name)
         
         if elf_symbol.section_index == ELFSymbolSpecialSection.SHN_ABS.value:
           # Symbol is located in main.dol.
