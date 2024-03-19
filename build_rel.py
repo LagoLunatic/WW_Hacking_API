@@ -1,4 +1,4 @@
-#!/usr/bin/python3.10
+#!/usr/bin/python3
 
 import os
 from subprocess import call
@@ -72,6 +72,7 @@ elf_path = os.path.join(build_dir, basename_no_ext + ".o")
 command = [
   get_bin("powerpc-eabi-gcc"),
   "-mcpu=750",
+  "-std=c99",
   "-fno-inline",
   "-Wall",
   "-Og",
