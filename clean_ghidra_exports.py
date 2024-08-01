@@ -1,6 +1,6 @@
 
 import re
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 import yaml
 
 
@@ -75,7 +75,8 @@ DATA_TYPE_TO_BYTE_SIZE = {
   "size_t": 4,
 }
 
-DATA_TYPE_TO_NEEDED_ALIGNMENT = {
+DATA_TYPE_TO_NEEDED_ALIGNMENT = defaultdict(lambda: 1)
+DATA_TYPE_TO_NEEDED_ALIGNMENT.update({
   "u8": 1,
   "u16": 2,
   "u32": 4,
@@ -116,7 +117,7 @@ DATA_TYPE_TO_NEEDED_ALIGNMENT = {
   "__off_t": 4,
   "__off64_t": 4, # Not sure why this isn't 8
   "size_t": 4,
-}
+})
 
 def clean_symbol_name(symbol_name):
   symbol_name = symbol_name.replace("new[]", "new_array")
@@ -153,6 +154,8 @@ current_enum_name = None
 current_struct_name = None
 current_enum_data_size = None
 offset_in_current_struct = None
+undefined_area_start = None
+undefined_area_end = None
 for line in input_str.splitlines():
   comment_match = re.search(r" //| /\*", line)
   if comment_match:
@@ -244,15 +247,39 @@ for line in input_str.splitlines():
   if enum_def_match:
     current_enum_data_size = 1
   
+  if undefined_area_start is not None and current_struct_name is not None and line == "};":
+    # End an undefined area.
+    output_str += f"{indentation}/* 0x{undefined_area_start:02X} */ undefined field_0x{undefined_area_start:02X}[0x{undefined_area_end:02X} - 0x{undefined_area_start:02X}];\n"
+    undefined_area_start = None
+    undefined_area_end = None
+  
   # Handle adding offset comments to structs.
   if offset_in_current_struct is not None:
-    field_def_match = re.search(r"^(    )(?:((?:struct |enum )?\S+(?: \*){0,}) (\S+)|(\S+ \(\*+ \S+\)\([^)]*\)));$", line)
+    field_def_match = re.search(r"^(    )(?:((?:struct |enum )?\S+(?: \*){0,}) ?([^\s*]\S*)|(\S+ \(\*+ *\S+\)\([^)]*\)));$", line)
     data_type_size = None
     if field_def_match:
       indentation = field_def_match.group(1)
       data_type = field_def_match.group(2)
       field_name = field_def_match.group(3)
       method_field_def = field_def_match.group(4)
+      
+      if not method_field_def and data_type == "undefined" and (field_name_offset_match := re.search(r"^field\d+_0x([0-9a-f]+)$", field_name)):
+        # Group together long sequences of undefined bytes to save space.
+        field_name_offset = int(field_name_offset_match.group(1), 16)
+        # print(current_struct_name, line, undefined_area_start, field_name_offset)
+        if undefined_area_start is None:
+          undefined_area_start = field_name_offset
+          undefined_area_end = field_name_offset + 1
+        else:
+          assert undefined_area_start < field_name_offset
+          undefined_area_end = field_name_offset + 1
+        offset_in_current_struct += 1
+        continue
+      elif undefined_area_start is not None:
+        # End an undefined area.
+        output_str += f"{indentation}/* 0x{undefined_area_start:02X} */ undefined field_0x{undefined_area_start:02X}[0x{undefined_area_end:02X} - 0x{undefined_area_start:02X}];\n"
+        undefined_area_start = None
+        undefined_area_end = None
       
       if method_field_def:
         # e.g.:
@@ -327,7 +354,7 @@ for line in input_str.splitlines():
     current_enum_data_size = None
   if current_struct_name is not None and line == "};":
     if full_current_struct_name in DATA_TYPE_TO_BYTE_SIZE and DATA_TYPE_TO_BYTE_SIZE[full_current_struct_name] != offset_in_current_struct:
-      raise Exception("Size of struct %s is inconsistent!" % current_struct_name)
+      raise Exception(f"Size of struct {current_struct_name} is inconsistent!\nPrevious: 0x{DATA_TYPE_TO_BYTE_SIZE[full_current_struct_name]:02X}\nNew: 0x{offset_in_current_struct:02X}")
     if offset_in_current_struct is not None and offset_in_current_struct != 0:
       DATA_TYPE_TO_BYTE_SIZE[full_current_struct_name] = offset_in_current_struct
     current_struct_name = None
@@ -349,6 +376,7 @@ func_name_to_namespaces = OrderedDict()
 for line in input_str.splitlines()[1:]:
   line = line[1:-1] # Remove first and last quotation mark since split won't get these
   line = line.replace("\\,", ",") # Unescape commas
+  # Note: The "Namespace" column is disabled by default in Ghidra's Defined Data view. You have to enable it.
   func_name, address, func_signature, func_size, namespace = line.split("\",\"")
   address = int(address, 16)
   func_size = int(func_size, 16)
@@ -476,6 +504,8 @@ var_datas = []
 for line in input_str.splitlines()[1:]:
   line = line[1:-1] # Remove first and last quotation mark since split won't get these
   line = line.replace("\\,", ",") # Unescape commas
+  # Note: The "Namespace" column is disabled by default in Ghidra's Defined Data view. You have to enable it.
+  # Note: The "Label" column is disabled by default too, you have to enable it and reorder it to be first.
   var_name, address, data_type, data_size, namespace = line.split("\",\"")
   address = int(address, 16)
   data_size = int(data_size, 16)
