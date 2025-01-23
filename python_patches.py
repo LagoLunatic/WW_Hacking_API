@@ -1,0 +1,539 @@
+from gc_filesystem import GameCubeFilesystem
+import fs_helpers as fs
+
+def apply_patches(gc_fs: GameCubeFilesystem):
+    pass
+    # Uncomment (by removing the '# ') the lines for any patches you want applied.
+    # allow_all_items_to_be_field_items(gc_fs)
+
+item_ids_without_a_field_model = [
+    0x1A,
+    0x20,
+    0x21,
+    0x22,
+    0x23,
+    0x24,
+    0x25,
+    0x26,
+    0x27,
+    0x28,
+    0x29,
+    0x2A,
+    0x2B,
+    0x2C,
+    0x2D,
+    0x2E,
+    0x2F,
+    0x30,
+    0x31,
+    0x32,
+    0x33,
+    0x35,
+    0x36,
+    0x39,
+    0x3A,
+    0x3C,
+    0x3E,
+    0x3F,
+    0x42,
+    0x43,
+    0x4C,
+    0x4D,
+    0x4E,
+    0x50,
+    0x51,
+    0x52,
+    0x53,
+    0x54,
+    0x55,
+    0x56,
+    0x57,
+    0x58,
+    0x59,
+    0x61,
+    0x62,
+    0x63,
+    0x64,
+    0x65,
+    0x66,
+    0x67,
+    0x68,
+    0x69,
+    0x6A,
+    0x6B,
+    0x6C,
+    0x6D,
+    0x6E,
+    0x6F,
+    0x70,
+    0x71,
+    0x72,
+    0x78,
+    0x79,
+    0x7A,
+    0x7B,
+    0x7C,
+    0x7D,
+    0x7E,
+    0x7F,
+    0x80,
+    0x98,
+    0x99,
+    0x9A,
+    0x9B,
+    0x9C,
+    0x9D,
+    0x9E,
+    0x9F,
+    0xA0,
+    0xA1,
+    0xA2,
+    0xA3,
+    0xA4,
+    0xA5,
+    0xA6,
+    0xA7,
+    0xAA,
+    0xAB,
+    0xAC,
+    0xAD,
+    0xAE,
+    0xAF,
+    0xB0,
+    0xB1,
+    0xB2,
+    0xB3,
+    0xB4,
+    0xB5,
+    0xB6,
+    0xB7,
+    0xB8,
+    0xB9,
+    0xBA,
+    0xBB,
+    0xBC,
+    0xBD,
+    0xBE,
+    0xBF,
+    0xC0,
+    0xC1,
+    0xC2,
+    0xC3,
+    0xC4,
+    0xC5,
+    0xC6,
+    0xC7,
+    0xC8,
+    0xC9,
+    0xCA,
+    0xCB,
+    0xCC,
+    0xCD,
+    0xCE,
+    0xCF,
+    0xD0,
+    0xD1,
+    0xD2,
+    0xD3,
+    0xD4,
+    0xD5,
+    0xD6,
+    0xD7,
+    0xD8,
+    0xD9,
+    0xDA,
+    0xDB,
+    0xDC,
+    0xDD,
+    0xDE,
+    0xDF,
+    0xE0,
+    0xE1,
+    0xE2,
+    0xE3,
+    0xE4,
+    0xE5,
+    0xE6,
+    0xE7,
+    0xE8,
+    0xE9,
+    0xEA,
+    0xEB,
+    0xEC,
+    0xED,
+    0xEE,
+    0xEF,
+    0xF0,
+    0xF1,
+    0xF2,
+    0xF3,
+    0xF4,
+    0xF5,
+    0xF6,
+    0xF7,
+    0xF8,
+    0xF9,
+    0xFA,
+    0xFB,
+    0xFC,
+    0xFD,
+    0xFE,
+]
+
+arc_name_pointers = {
+    0x00: 0x8035A0A8,
+    0x01: 0x8035A2B1,
+    0x02: 0x8035A2B1,
+    0x03: 0x8035A2B1,
+    0x04: 0x8035A2B1,
+    0x05: 0x8035A2B1,
+    0x06: 0x8035A2B1,
+    0x07: 0x8035A0B5,
+    0x08: 0x8035A0AF,
+    0x09: 0x8035A0A8,
+    0x0A: 0x8035A0A8,
+    0x0B: 0x8035A0D0,
+    0x0C: 0x8035A0D0,
+    0x0D: 0x8035A0D0,
+    0x0E: 0x8035A0D0,
+    0x0F: 0x8035A2B1,
+    0x10: 0x8035A0A8,
+    0x11: 0x8035A0A8,
+    0x12: 0x8035A0A8,
+    0x13: 0x00000000,
+    0x14: 0x00000000,
+    0x15: 0x8035A0BB,
+    0x16: 0x8035A26C,
+    0x17: 0x00000000,
+    0x18: 0x00000000,
+    0x19: 0x00000000,
+    0x1A: 0x8035A2B1,
+    0x1B: 0x00000000,
+    0x1C: 0x00000000,
+    0x1D: 0x00000000,
+    0x1E: 0x8035A0A8,
+    0x1F: 0x8035A20C,
+    0x20: 0x8035A0C8,
+    0x21: 0x8035A1C6,
+    0x22: 0x8035A24F,
+    0x23: 0x8035A13D,
+    0x24: 0x8035A15B,
+    0x25: 0x8035A212,
+    0x26: 0x8035A316,
+    0x27: 0x8035A267,
+    0x28: 0x8035A1B0,
+    0x29: 0x8035A121,
+    0x2A: 0x8035A218,
+    0x2B: 0x8035A127,
+    0x2C: 0x8035A161,
+    0x2D: 0x8035A11C,
+    0x2E: 0x8035A29F,
+    0x2F: 0x8035A1AA,
+    0x30: 0x8035A155,
+    0x31: 0x8035A0D0,
+    0x32: 0x8035A29F,
+    0x33: 0x8035A1CC,
+    0x34: 0x8035A14F,
+    0x35: 0x8035A255,
+    0x36: 0x8035A261,
+    0x37: 0x00000000,
+    0x38: 0x8035A237,
+    0x39: 0x00000000,
+    0x3A: 0x00000000,
+    0x3B: 0x8035A243,
+    0x3C: 0x8035A23D,
+    0x3D: 0x8035A237,
+    0x3E: 0x00000000,
+    0x3F: 0x8035A0B5,
+    0x40: 0x00000000,
+    0x41: 0x00000000,
+    0x42: 0x8035A1D2,
+    0x43: 0x8035A1D8,
+    0x44: 0x00000000,
+    0x45: 0x8035A2A5,
+    0x46: 0x8035A0E3,
+    0x47: 0x8035A0DD,
+    0x48: 0x8035A2AB,
+    0x49: 0x8035A0E9,
+    0x4A: 0x8035A0E9,
+    0x4B: 0x8035A0E9,
+    0x4C: 0x8035A149,
+    0x4D: 0x8035A143,
+    0x4E: 0x8035A0C1,
+    0x4F: 0x00000000,
+    0x50: 0x8035A112,
+    0x51: 0x8035A1EA,
+    0x52: 0x8035A1E4,
+    0x53: 0x8035A1DE,
+    0x54: 0x8035A293,
+    0x55: 0x8035A293,
+    0x56: 0x8035A299,
+    0x57: 0x8035A287,
+    0x58: 0x8035A28D,
+    0x59: 0x8035A281,
+    0x5A: 0x00000000,
+    0x5B: 0x00000000,
+    0x5C: 0x00000000,
+    0x5D: 0x00000000,
+    0x5E: 0x00000000,
+    0x5F: 0x00000000,
+    0x60: 0x00000000,
+    0x61: 0x8035A249,
+    0x62: 0x8035A2D4,
+    0x63: 0x8035A2DA,
+    0x64: 0x8035A2E0,
+    0x65: 0x8035A2E6,
+    0x66: 0x8035A2EC,
+    0x67: 0x8035A2F2,
+    0x68: 0x8035A2F8,
+    0x69: 0x8035A21E,
+    0x6A: 0x8035A26F,
+    0x6B: 0x8035A278,
+    0x6C: 0x8035A1D2,
+    0x6D: 0x8035A1D2,
+    0x6E: 0x8035A1D2,
+    0x6F: 0x8035A1D2,
+    0x70: 0x8035A1D2,
+    0x71: 0x8035A1D2,
+    0x72: 0x8035A1D2,
+    0x73: 0x00000000,
+    0x74: 0x00000000,
+    0x75: 0x00000000,
+    0x76: 0x00000000,
+    0x77: 0x00000000,
+    0x78: 0x8035A1B6,
+    0x79: 0x8035A2FE,
+    0x7A: 0x8035A2FE,
+    0x7B: 0x8035A2FE,
+    0x7C: 0x8035A2FE,
+    0x7D: 0x8035A2FE,
+    0x7E: 0x8035A2FE,
+    0x7F: 0x8035A2FE,
+    0x80: 0x8035A2FE,
+    0x81: 0x00000000,
+    0x82: 0x8035A16D,
+    0x83: 0x8035A167,
+    0x84: 0x00000000,
+    0x85: 0x00000000,
+    0x86: 0x00000000,
+    0x87: 0x00000000,
+    0x88: 0x00000000,
+    0x89: 0x00000000,
+    0x8A: 0x00000000,
+    0x8B: 0x00000000,
+    0x8C: 0x8035A195,
+    0x8D: 0x8035A19C,
+    0x8E: 0x8035A1A3,
+    0x8F: 0x8035A18E,
+    0x90: 0x8035A187,
+    0x91: 0x8035A180,
+    0x92: 0x8035A179,
+    0x93: 0x8035A172,
+    0x94: 0x8035A1F0,
+    0x95: 0x8035A1F7,
+    0x96: 0x8035A205,
+    0x97: 0x8035A1FE,
+    0x98: 0x8035A2B7,
+    0x99: 0x8035A2BD,
+    0x9A: 0x8035A2C3,
+    0x9B: 0x8035A2C9,
+    0x9C: 0x8035A33A,
+    0x9D: 0x8035A1C0,
+    0x9E: 0x8035A1BA,
+    0x9F: 0x8035A316,
+    0xA0: 0x8035A1D2,
+    0xA1: 0x8035A1D2,
+    0xA2: 0x8035A1D2,
+    0xA3: 0x8035A31C,
+    0xA4: 0x8035A322,
+    0xA5: 0x8035A328,
+    0xA6: 0x8035A32E,
+    0xA7: 0x8035A334,
+    0xA8: 0x00000000,
+    0xA9: 0x00000000,
+    0xAA: 0x8035A237,
+    0xAB: 0x8035A0F5,
+    0xAC: 0x8035A0FB,
+    0xAD: 0x8035A116,
+    0xAE: 0x8035A127,
+    0xAF: 0x8035A101,
+    0xB0: 0x8035A107,
+    0xB1: 0x00000000,
+    0xB2: 0x00000000,
+    0xB3: 0x8035A2B1,
+    0xB4: 0x8035A2B1,
+    0xB5: 0x8035A2B1,
+    0xB6: 0x8035A2B1,
+    0xB7: 0x8035A2B1,
+    0xB8: 0x8035A2B1,
+    0xB9: 0x8035A2B1,
+    0xBA: 0x8035A2B1,
+    0xBB: 0x8035A2B1,
+    0xBC: 0x8035A2B1,
+    0xBD: 0x8035A2B1,
+    0xBE: 0x8035A2B1,
+    0xBF: 0x8035A2B1,
+    0xC0: 0x8035A2B1,
+    0xC1: 0x8035A2B1,
+    0xC2: 0x8035A25B,
+    0xC3: 0x8035A25B,
+    0xC4: 0x8035A25B,
+    0xC5: 0x8035A25B,
+    0xC6: 0x8035A25B,
+    0xC7: 0x8035A25B,
+    0xC8: 0x8035A25B,
+    0xC9: 0x8035A25B,
+    0xCA: 0x8035A25B,
+    0xCB: 0x8035A0EF,
+    0xCC: 0x8035A304,
+    0xCD: 0x8035A304,
+    0xCE: 0x8035A304,
+    0xCF: 0x8035A304,
+    0xD0: 0x8035A304,
+    0xD1: 0x8035A304,
+    0xD2: 0x8035A304,
+    0xD3: 0x8035A304,
+    0xD4: 0x8035A304,
+    0xD5: 0x8035A304,
+    0xD6: 0x8035A304,
+    0xD7: 0x8035A304,
+    0xD8: 0x8035A304,
+    0xD9: 0x8035A304,
+    0xDA: 0x8035A304,
+    0xDB: 0x8035A310,
+    0xDC: 0x8035A0EF,
+    0xDD: 0x8035A304,
+    0xDE: 0x8035A304,
+    0xDF: 0x8035A304,
+    0xE0: 0x8035A304,
+    0xE1: 0x8035A304,
+    0xE2: 0x8035A304,
+    0xE3: 0x8035A304,
+    0xE4: 0x8035A304,
+    0xE5: 0x8035A304,
+    0xE6: 0x8035A304,
+    0xE7: 0x8035A304,
+    0xE8: 0x8035A304,
+    0xE9: 0x8035A304,
+    0xEA: 0x8035A304,
+    0xEB: 0x8035A304,
+    0xEC: 0x8035A304,
+    0xED: 0x8035A30A,
+    0xEE: 0x8035A30A,
+    0xEF: 0x8035A30A,
+    0xF0: 0x8035A30A,
+    0xF1: 0x8035A30A,
+    0xF2: 0x8035A30A,
+    0xF3: 0x8035A30A,
+    0xF4: 0x8035A30A,
+    0xF5: 0x8035A30A,
+    0xF6: 0x8035A30A,
+    0xF7: 0x8035A2FE,
+    0xF8: 0x8035A2FE,
+    0xF9: 0x8035A2FE,
+    0xFA: 0x8035A2FE,
+    0xFB: 0x8035A2FE,
+    0xFC: 0x8035A2FE,
+    0xFD: 0x8035A2FE,
+    0xFE: 0x8035A2FE,
+}
+
+def allow_all_items_to_be_field_items(self: GameCubeFilesystem):
+  # Most items cannot be field items (items that appear freely floating on the ground) because they don't have a field model defined.
+  # Here we copy the regular item get model to the field model so that any item can be a field item.
+  # We also change the code run when you touch the item so that these items play out the full item get animation with text, instead of merely popping up above the player's head like a rupee.
+  # And we change the Y offsets so the items don't appear lodged inside the floor, and can be picked up easily.
+  # And also change the radius for items that had 0 radius so the player doesn't need to be right inside the item to pick it up.
+  # Also change the code run by items during the wait state, which affects the physics when shot out of Gohdan's nose for example.
+  
+  item_resources_list_start = 0x803842B0
+  field_item_resources_list_start = 0x803866B0
+  itemGetExecute_switch_statement_entries_list_start = 0x8038CA6C
+  mode_wait_switch_statement_entries_list_start = 0x8038CC7C
+  
+  for item_id in item_ids_without_a_field_model:
+    if item_id in [0x39, 0x3A, 0x3E]:
+      # Master Swords don't have a proper item get model defined, so we need to use the Hero's Sword instead.
+      item_id_to_copy_from = 0x38
+      # We also change the item get model too, not just the field model.
+      item_resources_addr_to_fix = item_resources_list_start + item_id*0x24
+    elif item_id in [0x6D, 0x6E, 0x6F, 0x70, 0x71, 0x72]:
+      # Songs use the Pirate's Charm model by default, so we change it to use the Wind Waker model instead.
+      item_id_to_copy_from = 0x22
+      # We also change the item get model too, not just the field model.
+      item_resources_addr_to_fix = item_resources_list_start + item_id*0x24
+    elif item_id in [0xB1, 0xB2]:
+      # The Magic Meter and Magic Meter Upgrade have no models, so we have to copy the Green Potion model.
+      item_id_to_copy_from = 0x52
+      # We also change the item get model too, not just the field model.
+      item_resources_addr_to_fix = item_resources_list_start + item_id*0x24
+    else:
+      item_id_to_copy_from = item_id
+      item_resources_addr_to_fix = None
+    
+    item_resources_addr_to_copy_from = item_resources_list_start + item_id_to_copy_from*0x24
+    field_item_resources_addr = field_item_resources_list_start + item_id*0x1C
+    
+    arc_name_pointer = arc_name_pointers[item_id_to_copy_from]
+    
+    self.dol.write_data(fs.write_u32, field_item_resources_addr, arc_name_pointer)
+    if item_resources_addr_to_fix:
+      self.dol.write_data(fs.write_u32, item_resources_addr_to_fix, arc_name_pointer)
+    
+    data1 = self.dol.read_data(fs.read_bytes, item_resources_addr_to_copy_from+8, 0xD)
+    data2 = self.dol.read_data(fs.read_bytes, item_resources_addr_to_copy_from+0x1C, 4)
+    self.dol.write_data(fs.write_bytes, field_item_resources_addr+4, data1)
+    self.dol.write_data(fs.write_bytes, field_item_resources_addr+0x14, data2)
+    if item_resources_addr_to_fix:
+      self.dol.write_data(fs.write_bytes, item_resources_addr_to_fix+8, data1)
+      self.dol.write_data(fs.write_bytes, item_resources_addr_to_fix+0x1C, data2)
+  
+  # Also nop out the 6 lines of code that initialize the arc filename pointer for the 6 songs.
+  # These lines would overwrite the change we made from the Pirate's Charm model to the Wind Waker model for songs.
+  for address in [0x800C1970, 0x800C1978, 0x800C1980, 0x800C1988, 0x800C1990, 0x800C1998]:
+    self.dol.write_data(fs.write_u32, address, 0x60000000) # nop
+  
+  
+  # Fix which code runs when the player touches the field item to pick the item up.
+  for item_id in range(0, 0x83+1):
+    # Update the switch statement cases in function itemGetExecute for items that originally used the default case (0x800F6C8C).
+    # This default case wouldn't give the player the item. It would just appear above the player's head for a moment like a Rupee and not be added to the player's inventory.
+    # We switch it to case 0x800F675C, which will use the proper item get event with all the animations, text, etc.
+    location_of_items_switch_statement_case = itemGetExecute_switch_statement_entries_list_start + item_id*4
+    original_switch_case = self.dol.read_data(fs.read_u32, location_of_items_switch_statement_case)
+    if original_switch_case == 0x800F6C8C:
+      self.dol.write_data(fs.write_u32, location_of_items_switch_statement_case, 0x800F675C)
+  
+  # Also change the switch case in itemGetExecute used by items with IDs 0x84+ to go to 800F675C as well.
+  self.dol.write_data(fs.write_u32, 0x800F6468, 0x418102F4) # bgt 0x800F675C
+  
+  
+  # Update the visual Y offsets so the item doesn't look like it's halfway inside the floor and difficult to see.
+  # First update the default case of the switch statement in the function getYOffset so that it reads from 803F9E84 (value: 23.0), instead of 803F9E80 (value: 0.0).
+  self.dol.write_data(fs.write_u32, 0x800F4CD0, 0xC022A184) # lfs f1, -0x5E7C(rtoc)
+  # And fix the Big Key so it uses the default case with the 23.0 offset, instead of using the 0.0 offset. (Other items already use the default case, so we don't need to fix any besides Big Key.)
+  self.dol.write_data(fs.write_u32, 0x8038C8B8 + 0x4E*4, 0x800F4CD0)
+  
+  
+  # We also change the Y offset of the hitbox for any items that have 0 for the Y offset.
+  # Without this change the item would be very difficult to pick up, the only way would be to stand on top of it and do a spin attack.
+  # And also change the radius of the hitbox for items that have 0 for the radius.
+  item_info_list_start = 0x803882B0
+  for item_id in range(0, 0xFF+1):
+    item_info_entry_addr = item_info_list_start+4*item_id
+    original_y_offset = self.dol.read_data(fs.read_u8, item_info_entry_addr+1)
+    if original_y_offset == 0:
+      self.dol.write_data(fs.write_u8, item_info_entry_addr+1, 0x28) # Y offset of 0x28
+    original_radius = self.dol.read_data(fs.read_u8, item_info_entry_addr+2)
+    if original_radius == 0:
+      self.dol.write_data(fs.write_u8, item_info_entry_addr+2, 0x28) # Radius of 0x28
+  
+  
+  for item_id in range(0x20, 0x44+1):
+    # Update the switch statement cases in function mode_wait for certain items that originally used the default case (0x800F8190 - leads to calling itemActionForRupee).
+    # This default case caused items to have the physics of rupees, which causes them to shoot out too far from Gohdan's nose.
+    # We switch it to case 0x800F8160 (itemActionForArrow), which is what heart containers and heart pieces use.
+    location_of_items_switch_statement_case = mode_wait_switch_statement_entries_list_start + item_id*4
+    self.dol.write_data(fs.write_u32, location_of_items_switch_statement_case, 0x800F8160)
+  # Also change the switch case used by items with IDs 0x4C+ to go to 800F8160 as well.
+  self.dol.write_data(fs.write_u32, 0x800F8138, 0x41810028) # bgt 0x800F8160

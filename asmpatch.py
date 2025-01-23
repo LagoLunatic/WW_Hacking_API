@@ -6,6 +6,7 @@ import os
 
 from gc_filesystem import GameCubeFilesystem
 from asm_api import patcher
+import python_patches
 
 
 if len(sys.argv) != 3:
@@ -24,5 +25,7 @@ all_asm_files = [os.path.splitext(os.path.basename(asm_path))[0] for asm_path in
 for patch_name in all_asm_files:
   print("Applying patch: %s.asm" % patch_name)
   patcher.apply_patch(gc_fs, patch_name)
+
+python_patches.apply_patches(gc_fs)
 
 gc_fs.save_modified_iso_files(modified_iso_folder)
