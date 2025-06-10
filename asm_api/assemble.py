@@ -130,6 +130,7 @@ def compile_c_to_asm(c_src_path):
     "-mregnames",
     "-S",
     "-fno-asynchronous-unwind-tables", # Needed to get rid of unnecessary .eh_frame section from the ELF.
+    "-fno-section-anchors", # Section anchors don't relocate correctly for some reason.
     "-c", c_src_path,
     "-o", asm_path,
   ]
@@ -143,9 +144,9 @@ def compile_c_to_asm(c_src_path):
     compiled_asm = f.read()
   
   # Uncomment the below to debug the compiled ASM.
-  #readable_asm = make_compiled_c_asm_more_readable(compiled_asm)
-  #with open("compiled_c_asm - %s.asm" % basename_no_ext, "w") as f:
-  #  f.write(readable_asm)
+  # readable_asm = make_compiled_c_asm_more_readable(compiled_asm)
+  # with open("compiled_c_asm - %s.asm" % basename_no_ext, "w") as f:
+  #   f.write(readable_asm)
   
   return compiled_asm
 
@@ -597,7 +598,7 @@ except Exception as e:
   stack_trace = traceback.format_exc()
   error_message = str(e) + "\n\n" + stack_trace
   print(error_message)
-  input()
+  # input()
   raise
 finally:
   shutil.rmtree(temp_dir)
