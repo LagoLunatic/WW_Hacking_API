@@ -30,6 +30,7 @@
 
 .open "sys/bi2.bin"
 ; Change a variable in the ISO header to allow the heap display to be used.
+; Note: You can also just set this value to 0 and Dolphin should auto-set it to whatever the configured memory size is.
 .org 0x04
   .int new_total_mem1_size
 .close
